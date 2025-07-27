@@ -16,9 +16,13 @@ struct Args
     #[arg(long, default_value_t = false)]
     pub skip : bool,
 
-    // Wait until the serial port is available.
-    #[arg(long, default_value_t = true)]
-    pub wait : bool,
+    // Don't wait until the serial port is available.
+    #[arg(long, default_value_t = false)]
+    pub no_wait : bool,
+
+    // Version of the firmware to flash
+    #[arg(long, default_value = "1.2.3")]
+    pub firmware_version: String,
 
     // Path to the firmware file
     #[arg(long, default_value = "")]
@@ -34,7 +38,39 @@ struct Args
 
 fn main() {
     let mut args = Args::parse();
-    let mut found = !args.wait;
+
+    let split_version = args.firmware_version.split('.').collect::<Vec<&str>>();
+    if split_version.len() != 3
+    {
+        eprintln!("Version must be in the format X.Y.Z (e.g., 1.2.3).");
+        return;
+    }
+
+    let major_version = match split_version[0].parse::<u8>() {
+        Ok(v) => v,
+        _ => {
+            eprintln!("Invalid major version. Must be a number between 0 and 255.");
+            return;
+        }
+    };
+
+    let minor_version = match split_version[1].parse::<u8>() {
+        Ok(v) => v,
+        _ => {
+            eprintln!("Invalid minor version. Must be a number between 0 and 255.");
+            return;
+        }
+    };
+
+    let patch_version = match split_version[2].parse::<u8>() {
+        Ok(v) => v,
+        _ => {
+            eprintln!("Invalid patch version. Must be a number between 0 and 255.");
+            return;
+        }
+    };
+
+    let mut found = args.no_wait;
 
     while !found
     {
@@ -98,10 +134,10 @@ fn main() {
 
         let mut header = [0u8; 0x10];
         header[0x0..0x4].copy_from_slice(&vec![0x14, 0x18, 0x01, 0x1A]); // Magic
-        header[0x4] = 0x01; // Board type
-        header[0x5] = 0x02; // Patch version
-        header[0x6] = 0x03; // Minor version
-        header[0x7] = 0xFF; // Major version
+        header[0x4] = major_version; // Major version
+        header[0x5] = minor_version; // Minor version
+        header[0x6] = patch_version; // Patch version
+        header[0x7] = 0xFF; // Board Type
         header[0x8] = 0x01; // Unknown
         header[0xC..0x10].copy_from_slice(&file_size.to_le_bytes());
 
