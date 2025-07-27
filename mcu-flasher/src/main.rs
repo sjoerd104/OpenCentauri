@@ -99,9 +99,8 @@ fn main() {
             "Skipping flash. Booting existing firmware on device: {}",
             args.device
         );
-        let mut buf = [0u8; 1];
-        buf[0] = 'a' as u8;
-        port.write(&buf).expect("Failed to write to port");
+
+        port.write(b"a").expect("Failed to write to port");
         port.flush().unwrap();
         return;
     }
