@@ -1,7 +1,7 @@
 use clap::Parser;
 use serialport::{SerialPort, TTYPort};
 use std::{
-    collections::HashMap, fs::{self, create_dir, remove_file}, io::{Read, Write}, os::unix::fs::symlink, path::PathBuf, process::exit, time::Duration
+    collections::HashMap, fs::{self, create_dir, remove_file}, io::{Read, Write}, os::unix::fs::symlink, path::PathBuf, process::exit, thread, time::Duration
 };
 
 use crate::config::{Args, SerialEntry, SerialEntryRaw};
@@ -127,8 +127,11 @@ fn communicate(
 
     std::thread::spawn(move || {
         let mut local_map = serial_ports_clone;
+        
 
         loop {
+            let mut any_data = false;
+
             local_map.iter_mut().for_each(|port| {
                 let mut buff = [0u8; 255];
                 if let Ok(bytes_to_read) = port.1.device.bytes_to_read()
@@ -149,9 +152,17 @@ fn communicate(
                                 }
                             }
                         }
+
+                        any_data = true;
                     }
                 }
             });
+
+            // TODO: Hacky fix to make this not eat up all the cpu. Use st3 in the future
+            if !any_data
+            {
+                thread::sleep(Duration::from_micros(100));
+            }
         }
     });
 
