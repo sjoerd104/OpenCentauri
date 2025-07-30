@@ -12,17 +12,18 @@ Credit to the Elegoo discord.|Credit to thijskunst on the OpenCentauri Discord.
 
 ## Mainboard Pins
 
-
 ### 24V input
 Type: 2-Pin Barrier terminal with 9.6mm pin pitch
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| - | GND |Closest to the stepper connectors|
-|1| + | +24V |Do nnot overtighten as it is very flimsy|
+|1| + | +24V |Do not overtighten as it is very flimsy|
 
 
 ### Steppers X,Y and Z
 Type: JST-**XA**-4P 
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| 2B|2B||
@@ -33,6 +34,7 @@ Type: JST-**XA**-4P
 
 ### Filament sensor
 Type: JST-**XA**-3P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| S | Signal | **3.3v** when filament is detected|
@@ -42,6 +44,7 @@ Type: JST-**XA**-3P
 
 ### Chamber temp sensor (marked "BOX-T" on the board)
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| none | Sig |standard NTC100k B3950| 
@@ -50,6 +53,7 @@ Type: JST-**XA**-2P
 
 ### Light
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| + | +24V | Max 1A | 
@@ -57,6 +61,7 @@ Type: JST-**XA**-2P
 
 ### Side fan (Marked "FAN-1" on the board)
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| + | +24V | MAX 1A|
@@ -64,6 +69,7 @@ Type: JST-**XA**-2P
 
 ### Rear exhaust Fan (marked "BOX-F" on the board)
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| + | +24V | MAX 1A|
@@ -72,6 +78,7 @@ Type: JST-**XA**-2P
 
 ### Camera
 Type: JST-**XA**-4P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| GND | GND | regular usb port but with a JST connector|
@@ -81,6 +88,7 @@ Type: JST-**XA**-4P
 
 ### UART0
 Type: JST-**XA**-2P + 4-Pin 2.54mm pin header
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 JST:
@@ -88,6 +96,7 @@ JST:
 |2| RX | RS232-RX | 
 
 4-Pin Header:
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| GND | GND | square pad |
@@ -98,6 +107,7 @@ JST:
 
 ### Multicolor
 Type: JST-**XA**-5P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| 24V  | +24V | 24v for motors inside the MMU|
@@ -109,7 +119,8 @@ Type: JST-**XA**-5P
 ### USB-C --> Extruder Board
 Type: USB-C (USB 2.0 only)
 
-    WARNING!! Do not plug in anything other than the extruder board. this type-C connector has 24v vcc instead of 5v. Anything you plug in WILL GET FRIED!!
+!!! warning 
+    Do not plug in anything other than the extruder board. this type-C connector has 24v vcc instead of 5v. Anything you plug in WILL GET FRIED!!
 
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
@@ -145,6 +156,7 @@ Type: USB-A
 
 ### Z-endstop (Marked "EXT" on the board)
 Type: JST-**XA**-3P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| | +24V||
@@ -153,6 +165,7 @@ Type: JST-**XA**-3P
 
 ### Mainboard fan "BFAN"
 Type: JST-**XA**-3P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1|  | +24V ||
@@ -162,6 +175,7 @@ Type: JST-**XA**-3P
 
 ### Bed MCU (RS-232)
 Type: JST-**XA**-5P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| 24V | +24V | Not used on the leveling mcu board|
@@ -173,6 +187,7 @@ Type: JST-**XA**-5P
 
 ### Bed heater "HBED"
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 |1| - | GND_PWM | Controlled by MCU|
@@ -181,6 +196,7 @@ Type: JST-**XA**-2P
 
 ### Bed temperature sensoor "BED-T"
 Type: JST-**XA**-2P
+
 |pin nr|marking|Function|remarks|
 |--|---|----|---|
 1|  | SIG|  NTC100k B3950|

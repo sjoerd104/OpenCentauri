@@ -8,14 +8,20 @@ This page contains some misc notes.
 
 ### OS
 
-The Centauri Carbon seems to be running a variant of TinaLinux/OpenWrt, considering the coredump references it.
+The Centauri Carbon runs on top of Tinalinux. The kernel has version 5.4.61. The installed version of glibc is 2.23.
 
 ### Is the Centauri Carbon running Klipper
 
-!!! question "Speculation"
-    I suspect so. The coredump contains a lot of references to Klippy, has klipper-esque logs, has bits of a klipper .cfg (/board-resource/printer.cfg), and has klipper-specific commands.
+The hotend and bed uses a pretty standard install of klipper, with some extensions for the bed specifically (hx711s, dirctl) for the pressure sensors. The DSP (used as a klipper MCU) is running klipper mcu code, but extended/modified to run on a DSP. 
 
-    Whatever it is, it seems to be very far gone from a standard klipper install...
+The mainboard host runs a monolithic app that exposes the webui, camera, api, screen ui, machine configuration, and most importantly klippy (transpiled to c++). 
+
+The version of klipper used on the DSP is `v0.9.1-616-g28f60f7e-dirty-20220408_035823-fluiddpi`
+
+See the [Custom Gcode](custom-gcode.md) page to see how to dump the .cfg's.
+
+!!! note
+    As klippy is heavily modified, not everything is supported. Modifying the klipper .cfg may lead to a bricked machine.
 
 ### Speed profiles
 
