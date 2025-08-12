@@ -184,7 +184,7 @@ fn multiplexed_port_sender(
         buff[1] = len as u8;
         buff[2..(2 + len)].copy_from_slice(&data.data);
 
-        if let Err(e) = multiplexed_port.write_all(&buff) {
+        if let Err(e) = multiplexed_port.write_all(&buff[..(2 + len)]) {
             // Something horrible happened, the multiplexed port is likely dead. Dropping packets until port is alive again...
             eprintln!("Failed to write to multiplexed port: {}", e);
             multiplexed_port = give_port(&multiplexed_port_manager);
