@@ -40,6 +40,40 @@ Internally, the following commands are used, where %s is the path to the .swu fi
 
 The Centauri Carbon during startup checks [an endpoint on chituiot.com](https://mms.chituiot.com/mainboardVersionUpdate/getInfo.do7?machineType=ELEGOO%20Centauri%20Carbon&machineId=0&version=1.1.0&lan=en&firmwareType=1) to check if a new firmware update is available. Below are archives of what this endpoint provided at the stated date.
 
+### v1.1.42 (Released 18/09/2025)
+
+[Download](https://download.chitubox.com/chitusystems/chitusystems/public/printer/firmware/release/1/ca8e1d9a20974a5896f8f744e780a8a7/1/1.1.42/2025-09-18/5de8bf345f044452a815dcf91241ddc0.bin){  referrerpolicy="no-referrer" .md-button .md-button--primary }
+
+Changelog:
+
+1. Fixed display abnormalities on the web interface.
+2. Addressed issues where power-off resumption failed to trigger in certain scenarios.
+3. Resolved abnormal status display during machine printing.
+4. Fixed several issues affecting printing stability.
+5. Optimized the cooling performance of the chassis fan.
+6. Improved filament detection during the printing process.
+7. Other known bugs have also been fixed.
+
+Raw response:
+```json
+{
+    "code": "000000",
+    "messages": null,
+    "data": {
+        "update": true,
+        "version": "1.1.42",
+        "packageUrl": "https://download.chitubox.com/chitusystems/chitusystems/public/printer/firmware/release/1/ca8e1d9a20974a5896f8f744e780a8a7/1/1.1.42/2025-09-18/5de8bf345f044452a815dcf91241ddc0.bin",
+        "firmwareType": 1,
+        "packageHash": "5699e7dbf42c58a446ad775764dae9f9",
+        "updateStrategy": 1,
+        "log": "Fixes：\n1. Fixed display abnormalities on the web interface.\n2. Addressed issues where power-off resumption failed to trigger in certain scenarios.\n3. Resolved abnormal status display during machine printing.\n4. Fixed several issues affecting printing stability.\n5. Optimized the cooling performance of the chassis fan.\n6. Improved filament detection during the printing process.\n7. Other known bugs have also been fixed.",
+        "timeMS": 1758185663037,
+        "dataInfoId": "695e23d1851d461d8793027bb6f34f49"
+    },
+    "success": true
+}
+```
+
 ### v1.1.29 (Released 18/06/2025)
 
 [Download](https://download.chitubox.com/chitusystems/chitusystems/public/printer/firmware/release/1/ca8e1d9a20974a5896f8f744e780a8a7/1/1.1.29/2025-06-18/810e5a7e9518452c9172e11a7d04a683.bin){  referrerpolicy="no-referrer" .md-button .md-button--primary }
