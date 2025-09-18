@@ -1,3 +1,6 @@
+permissions:
+  contents: write
+
 name: build-docs
 on:
   push:
@@ -6,6 +9,7 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+  workflow_dispatch:
       
 jobs:
   deploy:

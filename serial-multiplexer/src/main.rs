@@ -1,16 +1,27 @@
 use clap::Parser;
-use serialport::{SerialPort, TTYPort};
+use serialport::{Error, SerialPort, TTYPort};
 use std::{
-    collections::HashMap, fs::{self, create_dir, remove_file}, io::{Read, Write}, os::unix::fs::symlink, path::PathBuf, process::exit, thread, time::Duration
+    collections::HashMap,
+    fs::{self, create_dir, remove_file},
+    io::{Read, Write},
+    os::unix::fs::symlink,
+    path::PathBuf,
+    process::exit,
+    sync::{Arc, Mutex, mpsc::Receiver},
+    time::Duration,
 };
 
-use crate::config::{Args, SerialEntry, SerialEntryRaw};
+use crate::config::{Args, SerialEntryRaw};
+use crate::serial_connection::*;
 mod config;
+mod serial_connection;
 
 fn main() {
     println!("Hello, world!");
     let args = Args::parse();
-    if (!args.with_virtual_ports && !args.with_real_ports) || (args.with_virtual_ports && args.with_real_ports) {
+    if (!args.with_virtual_ports && !args.with_real_ports)
+        || (args.with_virtual_ports && args.with_real_ports)
+    {
         eprintln!("You must specify either --with_virtual_ports or --with_real_ports");
         exit(1);
     }
@@ -28,169 +39,243 @@ fn main() {
         exit(3);
     }
 
-    let mut multiplexed_port = match serialport::new(&args.device, args.baud)
-        .timeout(Duration::MAX)
-        .open_native() {
-        Ok(port) => port,
-        Err(e) => {
-            eprintln!(
-                "Failed to open multiplexed serial port {}: {}",
-                args.device, e
-            );
-            exit(5);
-        }
-    };
+    let multiplexed_port_manager = SerialPortManager::with_settings(SerialConnectionSettings {
+        baud_rate: args.baud,
+        device_path: args.device,
+    });
 
     let mut unused = vec![];
+    let (main_bus_sender, main_bus_receiver) = std::sync::mpsc::channel::<DataBlock>();
+
+    let mut sender_processors = vec![];
+    let mut receiver_processors = vec![];
+    let mut senders = vec![];
 
     if args.with_real_ports {
-        let mut serial_ports: HashMap<u32, SerialEntry> = serial_ports_raw
-            .iter()
-            .map(|f| {
-                let entry = f.1;
-                (
-                    entry.id as u32,
-                    config::SerialEntry {
-                        name: f.0.clone(),
-                        device: match serialport::new(&entry.device_path, entry.baud_rate).timeout(Duration::from_millis(100u64)).open_native() {
-                            Ok(port) => port,
-                            Err(e) => {
-                                eprintln!("Failed to open serial port {}: {}", entry.device_path, e);
-                                exit(4);
-                            }
-                        },
-                        id: entry.id,
-                    },
-                )
-            })
-            .collect();
+        serial_ports_raw.iter().for_each(|f| {
+            let config = SerialConnectionSettings {
+                baud_rate: f.1.baud_rate,
+                device_path: f.1.device_path.clone(),
+            };
 
-        communicate(&mut multiplexed_port, &mut serial_ports);
+            let (port_sender, port_receiver) = std::sync::mpsc::channel::<DataBlock>();
+
+            let serial_port_manager = SerialPortManager::with_settings(config);
+            let serial_port_manager_ref = Arc::new(Mutex::new(serial_port_manager));
+
+            sender_processors.push(SerialConnectionSenderProcessor {
+                id: f.1.id,
+                port_manager: serial_port_manager_ref.clone(),
+                port_receiver: port_receiver,
+            });
+
+            receiver_processors.push(SerialConnectionReceiverProcessor {
+                id: f.1.id,
+                port_manager: serial_port_manager_ref,
+                write_to_main_bus: main_bus_sender.clone(),
+            });
+
+            senders.push(SerialConnectionSender {
+                id: f.1.id,
+                port_sender: port_sender,
+            });
+        });
+    } else {
+        serial_ports_raw.iter().for_each(|f| {
+            let entry = f.1;
+
+            let (port_sender, port_receiver) = std::sync::mpsc::channel::<DataBlock>();
+
+            let (mut master, slave) = TTYPort::pair().expect("Unable to create ptty pair");
+            master.set_timeout(Duration::MAX).unwrap();
+
+            let name = slave.name().unwrap();
+            unused.push(slave);
+
+            let mut link_path = std::env::temp_dir();
+            link_path.push("vtty");
+            if !link_path.exists() {
+                create_dir(&link_path).unwrap();
+            }
+
+            link_path.push(f.0);
+            let _ = remove_file(&link_path);
+
+            symlink(name, link_path).unwrap();
+
+            let serial_port_manager = SerialPortManager::with_port(master);
+            let serial_port_manager_ref = Arc::new(Mutex::new(serial_port_manager));
+
+            sender_processors.push(SerialConnectionSenderProcessor {
+                id: entry.id,
+                port_manager: serial_port_manager_ref.clone(),
+                port_receiver: port_receiver,
+            });
+
+            receiver_processors.push(SerialConnectionReceiverProcessor {
+                id: entry.id,
+                port_manager: serial_port_manager_ref,
+                write_to_main_bus: main_bus_sender.clone(),
+            });
+
+            senders.push(SerialConnectionSender {
+                id: entry.id,
+                port_sender,
+            });
+        });
     }
-    else {
-        let mut serial_ports : HashMap<u32, SerialEntry> = serial_ports_raw
-            .iter()
-            .map(|f| {
-                let entry = f.1;
-                let (mut master, mut slave) = TTYPort::pair().expect("Unable to create ptty pair");
-                master.set_timeout(Duration::from_millis(100u64)).unwrap();
 
-                let name = slave.name().unwrap();
-                unused.push(slave);
-
-                let mut link_path = std::env::home_dir().unwrap_or(PathBuf::from("/dev"));
-
-                link_path.push("vtty");
-                if !link_path.exists()
-                {
-                    create_dir(&link_path).unwrap();
-                }
-
-                link_path.push(f.0);
-                let _ = remove_file(&link_path);
-
-                symlink(name, link_path).unwrap();
-
-                (
-                    entry.id as u32,
-                    config::SerialEntry {
-                        name: f.0.clone(),
-                        id: entry.id,
-                        device: master,
-                    }
-                )
-            })
-            .collect();
-
-        communicate(&mut multiplexed_port, &mut serial_ports);
-    }
+    println!("Starting communication loop...");
+    communicate(
+        sender_processors,
+        receiver_processors,
+        senders,
+        main_bus_receiver,
+        multiplexed_port_manager,
+    );
 }
 
 fn communicate(
-    multiplexed_port: &mut TTYPort,
-    serial_ports: &mut HashMap<u32, SerialEntry>,
+    sender_processors: Vec<SerialConnectionSenderProcessor>,
+    receiver_processors: Vec<SerialConnectionReceiverProcessor>,
+    senders: Vec<SerialConnectionSender>,
+    main_bus_receiver: Receiver<DataBlock>,
+    multiplexed_port_manager: SerialPortManager,
 ) {
-    let mut multiplexed_port_clone = multiplexed_port.try_clone_native().unwrap();
+    let multiplexed_port_manager_ref = Arc::new(Mutex::new(multiplexed_port_manager));
+    let multiplexed_port_manager_ref_clone = multiplexed_port_manager_ref.clone();
 
-    let mut serial_ports_clone: HashMap<u32, SerialEntry> = HashMap::new();
+    sender_processors.into_iter().for_each(|f| {
+        std::thread::spawn(move || {
+            f.process_loop();
+        });
+    });
 
-    serial_ports.iter().for_each(|port| {
-        serial_ports_clone.insert(
-            port.0.clone(),
-            SerialEntry { 
-                name: port.1.name.clone(), 
-                device: port.1.device.try_clone_native().unwrap(), 
-                id: port.1.id
-            },
-        );
+    receiver_processors.into_iter().for_each(|f| {
+        std::thread::spawn(move || {
+            f.process_loop();
+        });
     });
 
     std::thread::spawn(move || {
-        let mut local_map = serial_ports_clone;
-        
-
-        loop {
-            let mut any_data = false;
-
-            local_map.iter_mut().for_each(|port| {
-                let mut buff = [0u8; 255];
-                if let Ok(bytes_to_read) = port.1.device.bytes_to_read()
-                {
-                    if bytes_to_read > 0
-                    {
-                        if let Ok(bytes_read) = port.1.device.read(&mut buff) {
-                            if bytes_read > 0 {
-                                let mut mini_buff = [0u8; 2];
-                                mini_buff[0] = port.0.clone() as u8;
-                                mini_buff[1] = bytes_read as u8;
-
-                                multiplexed_port_clone.write_all(&mini_buff).unwrap();
-                                multiplexed_port_clone.write_all(&buff[..bytes_read]).unwrap();
-                                #[cfg(debug_assertions)]
-                                {
-                                    println!("Sent {} bytes for device {}", bytes_read, port.0);
-                                }
-                            }
-                        }
-
-                        any_data = true;
-                    }
-                }
-            });
-
-            // TODO: Hacky fix to make this not eat up all the cpu. Use st3 in the future
-            if !any_data
-            {
-                thread::sleep(Duration::from_micros(100));
-            }
-        }
+        multiplexed_port_sender(multiplexed_port_manager_ref_clone, main_bus_receiver);
     });
+
+    let serial_ports = senders
+        .into_iter()
+        .map(|f| (f.id as u32, f))
+        .collect::<HashMap<u32, SerialConnectionSender>>();
+
+    multiplexed_port_receiver(serial_ports, multiplexed_port_manager_ref);
+}
+
+fn multiplexed_port_sender(
+    multiplexed_port_manager: Arc<Mutex<SerialPortManager>>,
+    main_bus_receiver: Receiver<DataBlock>,
+) {
+    let mut multiplexed_port = give_port(&multiplexed_port_manager);
+
+    loop {
+        let data = main_bus_receiver.recv().unwrap();
+
+        let len = data.data.len();
+        let mut buff = [0u8; 2 + 255];
+        buff[0] = data.id as u8;
+        buff[1] = len as u8;
+        buff[2..(2 + len)].copy_from_slice(&data.data);
+
+        if let Err(e) = multiplexed_port.write_all(&buff[..(2 + len)]) {
+            // Something horrible happened, the multiplexed port is likely dead. Dropping packets until port is alive again...
+            eprintln!("Failed to write to multiplexed port: {}", e);
+            multiplexed_port = give_port(&multiplexed_port_manager);
+
+            while main_bus_receiver.try_recv().is_ok() {
+                // Clear the main bus receiver
+            }
+
+            continue;
+        }
+
+        #[cfg(debug_assertions)]
+        println!("Sent {} bytes for device {}", data.data.len(), data.id);
+    }
+}
+
+fn multiplexed_port_receiver(
+    serial_connection_senders: HashMap<u32, SerialConnectionSender>,
+    multiplexed_port_manager: Arc<Mutex<SerialPortManager>>,
+) {
+    let mut multiplexed_port = give_port(&multiplexed_port_manager);
+    let mut senders = serial_connection_senders;
 
     loop {
         let mut mini_buff = [0u8; 2];
-        if multiplexed_port.read_exact(&mut mini_buff).is_ok() {
-            let id = mini_buff[0];
-            let length = mini_buff[1] as usize;
 
-            let mut buff = vec![0u8; length];
-            if multiplexed_port.read_exact(&mut buff).is_ok() {
-                #[cfg(debug_assertions)]
-                {
-                    println!("Received {} bytes for device {}", length, id);
-                }
-
-                if let Some(port) = serial_ports.get_mut(&(id as u32))
-                {
-                    port.device.write_all(&buff).unwrap();
-                }
-                else
-                {
-                    eprintln!("Device with id {} does not exist. Assuming we're not in sync! Waiting 1s and trying again...", id);
-                    multiplexed_port.clear(serialport::ClearBuffer::Input).unwrap();
-                    std::thread::sleep(Duration::from_secs(1u64));
-                    multiplexed_port.clear(serialport::ClearBuffer::Input).unwrap();
-                }
-            }
+        if let Err(e) = multiplexed_port.read_exact(&mut mini_buff) {
+            eprintln!(
+                "Failed to read from multiplexed port (reading header): {}",
+                e
+            );
+            multiplexed_port = give_port(&multiplexed_port_manager);
+            continue;
         }
+
+        let id = mini_buff[0];
+        let length = mini_buff[1] as usize;
+
+        if length == 0 {
+            let reason = format!("Received zero-length data for device {}", id);
+            clear_buff_with_error_handling(
+                &mut multiplexed_port,
+                &reason,
+                &multiplexed_port_manager,
+            );
+            continue;
+        }
+
+        let mut buff = vec![0u8; length];
+
+        if let Err(e) = multiplexed_port.read_exact(&mut buff) {
+            eprintln!("Failed to read from multiplexed port (reading data): {}", e);
+            multiplexed_port = give_port(&multiplexed_port_manager);
+            continue;
+        }
+
+        #[cfg(debug_assertions)]
+        println!("Received {} bytes for device {}", length, id);
+
+        if let Some(port) = senders.get_mut(&(id as u32)) {
+            port.port_sender
+                .send(DataBlock { id, data: buff })
+                .expect("Failed to send data block to port sender");
+        } else {
+            let reason = format!("Device with id {} does not exist", id);
+            clear_buff_with_error_handling(
+                &mut multiplexed_port,
+                &reason,
+                &multiplexed_port_manager,
+            );
+        }
+    }
+}
+
+fn clear_buffer(port: &TTYPort, reason: &str) -> Result<(), Error> {
+    eprintln!(
+        "{}. Assuming we're not in sync! Waiting 1s and trying again...",
+        reason
+    );
+    port.clear(serialport::ClearBuffer::Input)?;
+    std::thread::sleep(Duration::from_secs(1u64));
+    port.clear(serialport::ClearBuffer::Input)
+}
+
+fn clear_buff_with_error_handling(
+    port: &mut TTYPort,
+    reason: &str,
+    port_manager: &Arc<Mutex<SerialPortManager>>,
+) {
+    if let Err(e) = clear_buffer(port, &reason) {
+        eprintln!("Failed to clear buffer: {}", e);
+        *port = give_port(port_manager);
     }
 }
