@@ -41,6 +41,7 @@ enum ChooseShareSpace
 ioctl_readwrite_bad!(read_debug_message, 0x01, DspSharespace);
 ioctl_readwrite_bad!(write_debug_message, 0x03, DspSharespace);
 ioctl_readwrite_bad!(kbuf_mgr_dev_create_buf, 0x100, KBufBufData);
+ioctl_readwrite_bad!(kbuf_mgr_dev_destroy_buf, 0x200, KBufBufData);
 
 fn choose_sharespace(fd : &OwnedFd, msg : &mut DspSharespace, choose : ChooseShareSpace) -> Result<(), Errno>
 {
@@ -120,6 +121,15 @@ struct UserWrapperBufData
     mgr_fd: OwnedFd,
     map_fd : OwnedFd,
     addr : MmapMut,
+}
+
+impl Drop for UserWrapperBufData
+{
+    fn drop(&mut self) {
+        println!("Dropping UserWrapperBufData, cleaning up kbuf");
+        let mgr_fd_raw = self.mgr_fd.as_raw_fd();
+        let _ = unsafe { kbuf_mgr_dev_destroy_buf(mgr_fd_raw, &mut self.buf) };
+    }
 }
 
 impl Default for KBufBufData
@@ -273,8 +283,8 @@ impl CommunicationHandler
         let mut head = MsgHead::from_bytes(self.sharespace.write_buffer.as_ref()[SHARE_SPACE_HEAD_OFFSET..].try_into().unwrap());
 
         head.init_state = if head.init_state == 1 || head.init_state == 2 { 2 } else { 1 };
-        head.read_addr = self.sharespace.dsp_sharespace.arm_write_addr + 4096;
-        head.write_addr = self.sharespace.dsp_sharespace.arm_write_addr;
+        head.read_addr = self.user_buf.buf.pa + 4096;
+        head.write_addr = self.user_buf.buf.pa;
 
         self.sharespace.write_buffer.as_mut()[SHARE_SPACE_HEAD_OFFSET..]
             .copy_from_slice(&head.to_bytes())
@@ -319,6 +329,9 @@ impl CommunicationHandler
             self.read_dsp_head();
             self.write_arm_head();
             
+            println!("Arm head: {:#?}", self.arm_head);
+            println!("Dsp head: {:#?}", self.dsp_head);
+
             if self.dsp_head.init_state == 1
             {
                 println!("Yay!");
@@ -326,28 +339,6 @@ impl CommunicationHandler
                 self.sharespace_arm_addr_write = self.dsp_head.write_addr;
                 break;
             }
-
-            println!("Arm head: {:#?}", self.arm_head);
-
-                    println!(
-            "{}",
-            self.get_write_slice().iter()
-                .map(|b| format!("{:02X}", b))
-                .collect::<Vec<String>>()
-                .join("")
-        );
-
-            println!("Dsp head: {:#?}", self.dsp_head);
-
-
-
-                println!(
-            "{}",
-            self.get_read_slice().iter()
-                .map(|b| format!("{:02X}", b))
-                .collect::<Vec<String>>()
-                .join("")
-        );
 
             std::thread::sleep(Duration::from_micros(10000));
         }
