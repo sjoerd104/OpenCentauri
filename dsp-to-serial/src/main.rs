@@ -79,8 +79,8 @@ struct Sharespace
 {
     fd: OwnedFd,
     dsp_sharespace : DspSharespace,
-    read_buffer : Mmap, // DSP buffer
-    write_buffer : MmapMut // ARM buffer
+    read_buffer : Mmap, // DSP buffer - pu8DspBuf
+    write_buffer : MmapMut // ARM buffer - pu8ArmBuf
 }
 
 fn sharespace_mmap() -> Sharespace
@@ -295,6 +295,7 @@ impl CommunicationHandler
             .copy_from_slice(&head.to_bytes())
     }
 
+    // pVirArmBuf
     fn get_write_slice(&mut self) -> &mut [u8]
     {
         &mut self.user_buf.addr.as_mut()[0..4096]
@@ -311,12 +312,24 @@ impl CommunicationHandler
         self.dsp_head = MsgHead::from_bytes(self.get_read_slice()[SHARE_SPACE_HEAD_OFFSET..].try_into().unwrap())
     }
 
+    fn debug_read_dsp_head(&mut self)
+    {
+        let dsp_head = MsgHead::from_bytes(self.get_read_slice()[SHARE_SPACE_HEAD_OFFSET..].try_into().unwrap());
+        println!("DSP head in memory: {:?}", dsp_head);
+    }
+
     fn write_arm_head(&mut self)
     {
         let bytes= self.arm_head.to_bytes();
         
         self.get_write_slice()[SHARE_SPACE_HEAD_OFFSET..]
             .copy_from_slice(&bytes)
+    }
+
+    fn debug_read_arm_head(&mut self)
+    {
+        let arm_head = MsgHead::from_bytes(self.get_write_slice()[SHARE_SPACE_HEAD_OFFSET..].try_into().unwrap());
+        println!("ARM head in memory: {:?}", arm_head);
     }
 
     unsafe fn invalidate_read_buffer(&mut self)
@@ -406,6 +419,71 @@ impl CommunicationHandler
 
         return result;
     }
+
+    fn dsp_mem_write(&mut self, msgbox_endpoint : &mut MsgboxEndpoint, data : &[u8])
+    {
+        // TODO: make constant
+        let min_addr = size_of::<MsgHead>();
+        let max_addr = SHARE_SPACE_HEAD_OFFSET;
+        let mut len = data.len();
+
+        let mut msg_start_addr: usize = self.arm_head.read_addr as usize;
+        let msg_end_addr: usize = self.dsp_head.write_addr as usize;
+        let msg_size: usize;
+
+        if len > 4000 || len <= 0
+        {
+            panic!("Cannot send too much or nothing!");
+        }
+
+        // Check: Can we not get the dsp head here?
+        self.debug_read_dsp_head();
+        self.dsp_head.read_addr = msgbox_endpoint.msgbox_new_msg_write as u32;
+        println!("Local DSP head: {:?}", self.dsp_head);
+        let free_size;
+        
+        if self.dsp_head.read_addr <= self.arm_head.write_addr
+        {
+            free_size = max_addr - min_addr - (self.arm_head.write_addr - self.dsp_head.read_addr) as usize;
+            if free_size <= len
+            {
+                panic!("Good job");
+            }
+        }
+        else
+        {
+            free_size = (self.dsp_head.read_addr - self.arm_head.write_addr) as usize;
+            if free_size <= len
+            {
+                panic!("Good job");
+            }
+        }
+
+        let mut pmsg = self.arm_head.write_addr as usize;
+        if pmsg + len <= max_addr
+        {
+            self.get_write_slice()[pmsg..pmsg + len].copy_from_slice(data);
+            pmsg += len;
+            if pmsg >= max_addr
+            {
+                pmsg = min_addr;
+            }
+        } 
+        else {
+            let len1 = max_addr - self.arm_head.write_addr as usize;
+            self.get_write_slice()[pmsg..pmsg + len1].copy_from_slice(&data[..len1]);
+            len -= len1;
+            self.get_write_slice()[min_addr..min_addr + len].copy_from_slice(&data[len1..]);
+            pmsg = min_addr + len;
+        }
+
+        self.arm_head.write_addr = pmsg as u32;
+        self.arm_head.init_state = 1;
+        self.write_arm_head();
+        msgbox_endpoint.msgbox_send_signal(self.arm_head.read_addr as u16, self.arm_head.write_addr as u16).unwrap();
+
+        println!("New write addr: {}", self.arm_head.write_addr);
+    }
 }
 
 fn main() {
@@ -423,10 +501,13 @@ fn main() {
 
     let mut msgbox = MsgboxEndpoint::new().unwrap();
 
+    let mut i = 1;
+
     loop
     {
         if msgbox.msgbox_read_signal(handler.arm_head.read_addr as u16).is_ok()
         {
+            std::thread::sleep(Duration::from_millis(100));
             println!("Got signal!");
             let data = handler.dsp_mem_read();
 
@@ -443,7 +524,16 @@ fn main() {
             println!("Got error, probably nothing to read...");
         }
 
+        if i % 5 == 0
+        {
+            println!("Testing write");
+            let data = vec![b'a', b'b', b'c'];
+            handler.dsp_mem_write(&mut msgbox, &data);
+        }
+
+        handler.debug_read_arm_head();
         println!("Sleeping");
         std::thread::sleep(Duration::from_secs(1));
+        i += 1;
     }
 }

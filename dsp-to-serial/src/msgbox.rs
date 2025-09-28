@@ -32,7 +32,10 @@ impl Default for RpmsgEndpointInfo
 
 pub struct MsgboxEndpoint
 {
-    msgbox_fd_ept : OwnedFd
+    msgbox_fd_ctrl : OwnedFd,
+    msgbox_fd_ept : OwnedFd,
+    pub msgbox_new_msg_write : u16,
+    msgbox_new_msg_read : u16,
 }
 
 fn wrap_ioctl_negative_invalid(result : Result<i32, Errno>) -> Result<i32, Errno>
@@ -113,15 +116,18 @@ impl MsgboxEndpoint
 
         let msgbox_fd_ept = open(
             &ept_interface,
-            OFlag::O_RDWR | OFlag::O_NONBLOCK,
+            OFlag::O_RDWR, //  | OFlag::O_NONBLOCK
             Mode::empty()
         )?;
 
         println!("Opened msgbox!");
 
-        // TODO: Do we need to keep the ctrl open?
-
-        Ok(MsgboxEndpoint { msgbox_fd_ept: msgbox_fd_ept })
+        Ok(MsgboxEndpoint { 
+            msgbox_fd_ctrl: msgbox_fd_ctrl,
+            msgbox_fd_ept: msgbox_fd_ept,
+            msgbox_new_msg_write: 0,
+            msgbox_new_msg_read: 0
+        })
     }
 
     pub fn msgbox_read_signal(&mut self, sharespace_arm_addr_read : u16) -> Result<bool, ApplicationError>
@@ -136,15 +142,17 @@ impl MsgboxEndpoint
 
         let data_recv = u32::from_le_bytes(buf[..].try_into().unwrap());
 
-        let msgbox_new_msg_read = data_recv as u16;
-        let msgbox_new_msg_write = (data_recv >> 16) as u16;
+        self.msgbox_new_msg_write = data_recv as u16;
+        self.msgbox_new_msg_read = (data_recv >> 16) as u16;
 
-        if msgbox_new_msg_write >= 5000 
+        println!("Msgbox read signal: write {}, read {}", self.msgbox_new_msg_write, self.msgbox_new_msg_read);
+
+        if self.msgbox_new_msg_read >= 5000 
         {
             return Ok(false);
         }
 
-        if msgbox_new_msg_write == sharespace_arm_addr_read
+        if self.msgbox_new_msg_read == sharespace_arm_addr_read
         {
             return Ok(false);
         }
@@ -155,7 +163,8 @@ impl MsgboxEndpoint
     pub fn msgbox_send_signal(&mut self, sharespace_arm_addr_read : u16, sharespace_arm_addr_write : u16) -> Result<(), ApplicationError>
     {
         let data_send = ((sharespace_arm_addr_write as u32) << 16) | sharespace_arm_addr_read as u32;
-        write(&self.msgbox_fd_ept, data_send.to_le_bytes()[..].try_into().unwrap())?;
+        let a = write(&self.msgbox_fd_ept, &data_send.to_le_bytes()[..])?;
+        println!("Wrote {} bytes ({:#x}) to msgbox", a, data_send);
 
         Ok(())
     }
