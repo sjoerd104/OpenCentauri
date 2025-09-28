@@ -3,6 +3,11 @@ use nix::{errno::Errno, fcntl::{open, OFlag}, ioctl_read_bad, ioctl_readwrite, i
 
 use memmap2::{Mmap, MmapMut, MmapOptions};
 
+use crate::msgbox::MsgboxEndpoint;
+
+mod msgbox;
+mod error;
+
 #[repr(C)]
 #[derive(Default, Debug)]
 struct DebugMessage {
@@ -295,6 +300,7 @@ impl CommunicationHandler
         &mut self.user_buf.addr.as_mut()[0..4096]
     }
 
+    // pVirDspBuf
     fn get_read_slice(&self) -> &[u8]
     {
         &self.user_buf.addr.as_ref()[4096..8192]
@@ -343,6 +349,63 @@ impl CommunicationHandler
             std::thread::sleep(Duration::from_micros(10000));
         }
     }
+
+    fn dsp_mem_read(&mut self) -> Vec<u8>
+    {
+        let min_addr = size_of::<MsgHead>();
+        let max_addr = SHARE_SPACE_HEAD_OFFSET;
+
+        self.read_dsp_head();
+
+        if self.arm_head.read_addr == self.dsp_head.write_addr
+        {
+            return vec![];
+        }
+
+        let mut msg_start_addr: usize = self.arm_head.read_addr as usize;
+        let msg_end_addr: usize = self.dsp_head.write_addr as usize;
+        let msg_size: usize;
+
+        if self.arm_head.read_addr < self.dsp_head.write_addr
+        {
+            msg_size = (self.dsp_head.write_addr - self.arm_head.read_addr) as usize;
+        }
+        else {
+            msg_size = max_addr - min_addr - ((self.arm_head.read_addr - self.dsp_head.write_addr) as usize);
+        }
+
+        let mut result;
+
+        if msg_start_addr + msg_size <= max_addr
+        {
+            result = self.get_read_slice()[msg_start_addr..msg_start_addr + msg_size].to_vec();
+
+            msg_start_addr += msg_size;
+
+            if msg_start_addr >= max_addr
+            {
+                msg_start_addr = min_addr
+            }
+        }
+        else  
+        {
+            let len1 = max_addr - msg_start_addr;
+            result = self.get_read_slice()[msg_start_addr..msg_start_addr + len1].to_vec();
+            result.extend(self.get_read_slice()[min_addr..min_addr + msg_size - len1].to_vec());
+            msg_start_addr = min_addr + msg_size - len1;
+        }
+
+        if msg_size > 0
+        {
+            self.arm_head.read_addr = msg_start_addr as u32;
+        }
+        else 
+        {
+            self.sharespace_arm_addr_read = self.arm_head.read_addr;
+        }
+
+        return result;
+    }
 }
 
 fn main() {
@@ -357,4 +420,30 @@ fn main() {
     println!("Done init_no_mmap!");
     handler.wait_dsp_set_init();
     println!("Done init!");
+
+    let mut msgbox = MsgboxEndpoint::new().unwrap();
+
+    loop
+    {
+        if msgbox.msgbox_read_signal(handler.arm_head.read_addr as u16).is_ok()
+        {
+            println!("Got signal!");
+            let data = handler.dsp_mem_read();
+
+            println!(
+            "{}",
+            data.iter()
+                .map(|b| format!("{:02X}", b))
+                .collect::<Vec<String>>()
+                .join("")
+             );
+        }
+        else 
+        {
+            println!("Got error, probably nothing to read...");
+        }
+
+        println!("Sleeping");
+        std::thread::sleep(Duration::from_secs(1));
+    }
 }
