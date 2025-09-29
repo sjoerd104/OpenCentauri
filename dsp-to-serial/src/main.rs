@@ -437,8 +437,9 @@ impl CommunicationHandler
         }
 
         // Check: Can we not get the dsp head here?
-        self.debug_read_dsp_head();
-        self.dsp_head.read_addr = msgbox_endpoint.msgbox_new_msg_write as u32;
+        //self.debug_read_dsp_head();
+        //self.dsp_head.read_addr = msgbox_endpoint.msgbox_new_msg_read as u32;
+        self.read_dsp_head();
         println!("Local DSP head: {:?}", self.dsp_head);
         let free_size;
         
@@ -480,6 +481,7 @@ impl CommunicationHandler
         self.arm_head.write_addr = pmsg as u32;
         self.arm_head.init_state = 1;
         self.write_arm_head();
+
         msgbox_endpoint.msgbox_send_signal(self.arm_head.read_addr as u16, self.arm_head.write_addr as u16).unwrap();
 
         println!("New write addr: {}", self.arm_head.write_addr);
@@ -487,6 +489,36 @@ impl CommunicationHandler
 }
 
 fn main() {
+/*
+    let map_fd = open(
+        "/dev/kbuf-map-1-test",
+        OFlag::O_RDWR,
+        Mode::empty(),
+    ).expect("Failed to open map device"); // Todo: include error type for this
+
+    let addr = unsafe {
+        MmapOptions::new().len(4 * 4096).map_mut(&map_fd).unwrap()
+    };
+
+            println!(
+            "Write slice: {}",
+            addr[..4096].iter()
+                .map(|b| format!("{:02X}", b))
+                .collect::<Vec<String>>()
+                .join("")
+             );
+
+                println!(
+            "Read slice: {}",
+            addr[4096..8192].iter()
+                .map(|b| format!("{:02X}", b))
+                .collect::<Vec<String>>()
+                .join("")
+             );
+
+
+    return;
+*/
     println!("Hello, world!");
     let mmap = sharespace_mmap();
     println!("Got sharespace mmap!");
@@ -524,14 +556,16 @@ fn main() {
             println!("Got error, probably nothing to read...");
         }
 
-        if i % 5 == 0
+        if i % 3 == 0
         {
             println!("Testing write");
-            let data = vec![b'a', b'b', b'c'];
-            handler.dsp_mem_write(&mut msgbox, &data);
+            let data :[u8; 10] = [0x04, 0x04, 0x7e, 0x7e, 0x7e,0x7e,0x7e,0x7e,0x7e,0x7e];
+            //let data = b"Hello from ARM!";
+            handler.dsp_mem_write(&mut msgbox, &data[..]);
         }
 
-        handler.debug_read_arm_head();
+        //handler.debug_read_arm_head();
+        
         println!("Sleeping");
         std::thread::sleep(Duration::from_secs(1));
         i += 1;

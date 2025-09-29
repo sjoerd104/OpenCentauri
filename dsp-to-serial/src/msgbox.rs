@@ -1,6 +1,6 @@
 use std::{fs::{self, File}, io::Read, os::fd::{AsRawFd, OwnedFd}, path::PathBuf};
 
-use nix::{errno::Errno, fcntl::{open, OFlag}, ioctl_readwrite, ioctl_write_ptr, libc::O_RDWR, sys::stat::Mode, unistd::{read, write}};
+use nix::{errno::Errno, fcntl::{open, OFlag}, ioctl_readwrite, ioctl_write_ptr, libc::{fflush, O_RDWR}, sys::stat::Mode, unistd::{read, write}};
 
 use crate::error::ApplicationError;
 
@@ -34,8 +34,8 @@ pub struct MsgboxEndpoint
 {
     msgbox_fd_ctrl : OwnedFd,
     msgbox_fd_ept : OwnedFd,
-    pub msgbox_new_msg_write : u16,
-    msgbox_new_msg_read : u16,
+    pub msgbox_new_msg_read : u16,
+    msgbox_new_msg_write : u16,
 }
 
 fn wrap_ioctl_negative_invalid(result : Result<i32, Errno>) -> Result<i32, Errno>
@@ -116,7 +116,7 @@ impl MsgboxEndpoint
 
         let msgbox_fd_ept = open(
             &ept_interface,
-            OFlag::O_RDWR, //  | OFlag::O_NONBLOCK
+            OFlag::O_RDWR,
             Mode::empty()
         )?;
 
@@ -125,8 +125,8 @@ impl MsgboxEndpoint
         Ok(MsgboxEndpoint { 
             msgbox_fd_ctrl: msgbox_fd_ctrl,
             msgbox_fd_ept: msgbox_fd_ept,
-            msgbox_new_msg_write: 0,
-            msgbox_new_msg_read: 0
+            msgbox_new_msg_read: 0,
+            msgbox_new_msg_write: 0
         })
     }
 
@@ -142,17 +142,17 @@ impl MsgboxEndpoint
 
         let data_recv = u32::from_le_bytes(buf[..].try_into().unwrap());
 
-        self.msgbox_new_msg_write = data_recv as u16;
-        self.msgbox_new_msg_read = (data_recv >> 16) as u16;
+        self.msgbox_new_msg_read = data_recv as u16;
+        self.msgbox_new_msg_write = (data_recv >> 16) as u16;
 
-        println!("Msgbox read signal: write {}, read {}", self.msgbox_new_msg_write, self.msgbox_new_msg_read);
+        println!("Msgbox read signal: read {}, write {}", self.msgbox_new_msg_read, self.msgbox_new_msg_write);
 
-        if self.msgbox_new_msg_read >= 5000 
+        if self.msgbox_new_msg_write >= 5000 
         {
             return Ok(false);
         }
 
-        if self.msgbox_new_msg_read == sharespace_arm_addr_read
+        if self.msgbox_new_msg_write == sharespace_arm_addr_read
         {
             return Ok(false);
         }
@@ -164,6 +164,7 @@ impl MsgboxEndpoint
     {
         let data_send = ((sharespace_arm_addr_write as u32) << 16) | sharespace_arm_addr_read as u32;
         let a = write(&self.msgbox_fd_ept, &data_send.to_le_bytes()[..])?;
+        
         println!("Wrote {} bytes ({:#x}) to msgbox", a, data_send);
 
         Ok(())

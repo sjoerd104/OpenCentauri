@@ -7,3 +7,7 @@ edition = "2024"
 nix = { version = "0", features = ["fs", "ioctl"] }
 memmap2 = "0"
 thiserror = "2"
+
+[profile.release]
+strip = true
+lto = true
