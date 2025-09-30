@@ -1,19 +1,15 @@
 use std::{
     fs::{self, File},
     io::Read,
-    os::fd::{AsRawFd, OwnedFd},
-    path::PathBuf,
+    os::fd::{AsFd, AsRawFd, OwnedFd},
+    path::PathBuf, sync::{Arc, Mutex},
 };
 
 use nix::{
-    errno::Errno,
-    fcntl::{OFlag, open},
-    ioctl_write_ptr,
-    sys::stat::Mode,
-    unistd::{read, write},
+    errno::Errno, fcntl::{open, OFlag}, ioctl_write_ptr, poll::{self, PollFd, PollTimeout}, sys::stat::Mode, unistd::{read, write}
 };
 
-use crate::error::ApplicationError;
+use crate::{error::ApplicationError, util::u8_slice_to_string};
 
 const RPMSG_CTRL_DEV: &str = "/dev/rpmsg_ctrl0";
 ioctl_write_ptr!(rpmsg_create_ept_ioctl, 0xb5, 0x1, RpmsgEndpointInfo);
@@ -41,7 +37,7 @@ impl Default for RpmsgEndpointInfo {
 pub struct MsgboxEndpoint {
     msgbox_fd_ctrl: OwnedFd,
     msgbox_fd_ept: OwnedFd,
-    pub msgbox_new_msg_read: u16,
+    msgbox_new_msg_read: u16,
     msgbox_new_msg_write: u16,
 }
 
@@ -57,13 +53,7 @@ fn wrap_ioctl_negative_invalid(result: Result<i32, Errno>) -> Result<i32, Errno>
 
 // TODO: Not very proud of this one
 fn get_ept_interface_by_name(rpmsg_endpoint_info: &RpmsgEndpointInfo) -> Option<PathBuf> {
-    // TODO: Find a better solution for this
-    let name_len = rpmsg_endpoint_info
-        .name
-        .iter()
-        .position(|&b| b == 0)
-        .unwrap();
-    let ept_name = unsafe { str::from_utf8_unchecked(&rpmsg_endpoint_info.name[..name_len]) };
+    let ept_name = u8_slice_to_string(&rpmsg_endpoint_info.name);
 
     let directories = match fs::read_dir("/sys/class/rpmsg") {
         Ok(directories) => directories,
@@ -84,13 +74,11 @@ fn get_ept_interface_by_name(rpmsg_endpoint_info: &RpmsgEndpointInfo) -> Option<
             };
 
             let mut buf = [0u8; 32];
-            if file.read_exact(&mut buf[..name_len]).is_err() {
+            if file.read_exact(&mut buf[..ept_name.len()]).is_err() {
                 continue;
             }
 
-            // TODO: Find a better solution for this
-            let buf_len = buf.iter().position(|&b| b == 0).unwrap();
-            let buf_as_str = unsafe { str::from_utf8_unchecked(&buf[..buf_len]) };
+            let buf_as_str = u8_slice_to_string(&buf);
 
             if buf_as_str == ept_name {
                 return Some(PathBuf::from(format!("/dev/{}", ele_name)));
@@ -129,6 +117,15 @@ impl MsgboxEndpoint {
             msgbox_new_msg_read: 0,
             msgbox_new_msg_write: 0,
         })
+    }
+
+    pub fn msgbox_has_signal(&mut self) -> bool
+    {
+        let poll_fd = PollFd::new(self.msgbox_fd_ept.as_fd(), poll::PollFlags::POLLIN);
+        return match poll::poll(&mut [poll_fd], PollTimeout::ZERO) {
+            Ok(num) => num > 0,
+            Err(_) => false,
+        };
     }
 
     pub fn msgbox_read_signal(
@@ -171,9 +168,17 @@ impl MsgboxEndpoint {
         let data_send =
             ((sharespace_arm_addr_write as u32) << 16) | sharespace_arm_addr_read as u32;
         let a = write(&self.msgbox_fd_ept, &data_send.to_le_bytes()[..])?;
-
         println!("Wrote {} bytes ({:#x}) to msgbox", a, data_send);
 
         Ok(())
+    }
+
+    pub fn try_clone(&self) -> Result<MsgboxEndpoint, ApplicationError> {
+        Ok(MsgboxEndpoint {
+            msgbox_fd_ctrl: self.msgbox_fd_ctrl.try_clone()?,
+            msgbox_fd_ept: self.msgbox_fd_ept.try_clone()?,
+            msgbox_new_msg_read: self.msgbox_new_msg_read,
+            msgbox_new_msg_write: self.msgbox_new_msg_write,
+        })
     }
 }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-nix = { version = "0", features = ["fs", "ioctl"] }
+nix = { version = "0", features = ["fs", "ioctl", "poll"] }
 memmap2 = "0"
 thiserror = "2"
 

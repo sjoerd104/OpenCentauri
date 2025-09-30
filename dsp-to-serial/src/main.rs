@@ -13,196 +13,17 @@ use std::{
 
 use memmap2::{MmapMut, MmapOptions};
 
-use crate::msgbox::MsgboxEndpoint;
+use crate::{
+    kbuf::{UserWrapperBufData, kbuf_use_new_buf},
+    msgbox::MsgboxEndpoint,
+    sharespace::{Sharespace, sharespace_mmap},
+};
 
 mod error;
+mod kbuf;
 mod msgbox;
-
-#[repr(C)]
-#[derive(Default, Debug)]
-struct DebugMessage {
-    pub sys_cnt: u32,
-    pub log_head_addr: u32,
-    pub log_end_addr: u32,
-    pub log_head_size: u32,
-}
-
-#[repr(C)]
-#[derive(Default, Debug)]
-struct DspSharespace {
-    pub dsp_write_addr: u32,
-    pub dsp_write_size: u32,
-
-    pub arm_write_addr: u32,
-    pub arm_write_size: u32,
-
-    pub dsp_log_addr: u32,
-    pub dsp_log_size: u32,
-
-    pub mmap_phy_addr: u32,
-    pub mmap_phy_size: u32,
-
-    pub arom_read_dsp_log_addr: u32,
-    pub debug_msg: DebugMessage,
-}
-
-enum ChooseShareSpace {
-    CHOOSE_DSP_WRITE_SPACE = 0,
-    CHOOSE_ARM_WRITE_SPACE = 1,
-}
-
-ioctl_readwrite_bad!(read_debug_message, 0x01, DspSharespace);
-ioctl_readwrite_bad!(write_debug_message, 0x03, DspSharespace);
-ioctl_readwrite_bad!(kbuf_mgr_dev_create_buf, 0x100, KBufBufData);
-ioctl_readwrite_bad!(kbuf_mgr_dev_destroy_buf, 0x200, KBufBufData);
-
-fn choose_sharespace(
-    fd: &OwnedFd,
-    msg: &mut DspSharespace,
-    choose: ChooseShareSpace,
-) -> Result<(), Errno> {
-    let raw_fd = fd.as_raw_fd();
-    wrap_ioctl_negative_invalid(unsafe { read_debug_message(raw_fd, msg) })?;
-
-    println!("Before choose: {:#?}", msg);
-
-    msg.mmap_phy_addr = match choose {
-        ChooseShareSpace::CHOOSE_DSP_WRITE_SPACE => msg.dsp_write_addr,
-        ChooseShareSpace::CHOOSE_ARM_WRITE_SPACE => msg.arm_write_addr,
-    };
-
-    wrap_ioctl_negative_invalid(unsafe { write_debug_message(raw_fd, msg) })?;
-
-    Ok(())
-}
-
-fn sharespace_open() -> Result<OwnedFd, Errno> {
-    open(
-        "/dev/dsp_debug",
-        OFlag::O_RDWR | OFlag::O_SYNC | OFlag::O_NONBLOCK,
-        Mode::empty(),
-    )
-}
-
-struct Sharespace {
-    fd: OwnedFd,
-    dsp_sharespace: DspSharespace,
-    write_buffer: MmapMut, // ARM buffer - pu8ArmBuf
-}
-
-fn sharespace_mmap() -> Sharespace {
-    let mut dsp_sharespace = DspSharespace::default();
-    let fd = sharespace_open().unwrap();
-
-    choose_sharespace(
-        &fd,
-        &mut dsp_sharespace,
-        ChooseShareSpace::CHOOSE_ARM_WRITE_SPACE,
-    )
-    .unwrap();
-
-    let write_buffer = unsafe { MmapOptions::new().len(0x1000).map_mut(&fd).unwrap() };
-
-    Sharespace {
-        fd,
-        dsp_sharespace,
-        write_buffer,
-    }
-}
-
-#[repr(C)]
-#[derive(Debug)]
-struct KBufBufData {
-    name: [u8; 32],
-    len: u32,
-    ktype: u32,
-    minor: i32,
-    va: u32, // ptr, virtual address that program can directly use.
-    pa: u32, // ptr, physical address.
-}
-
-struct UserWrapperBufData {
-    buf: KBufBufData,
-    mgr_fd: OwnedFd,
-    map_fd: OwnedFd,
-    addr: MmapMut,
-}
-
-impl Drop for UserWrapperBufData {
-    fn drop(&mut self) {
-        println!("Dropping UserWrapperBufData, cleaning up kbuf");
-        let mgr_fd_raw = self.mgr_fd.as_raw_fd();
-        let _ = unsafe { kbuf_mgr_dev_destroy_buf(mgr_fd_raw, &mut self.buf) };
-    }
-}
-
-impl Default for KBufBufData {
-    fn default() -> Self {
-        let mut buf = [0u8; 32];
-        buf[..4].copy_from_slice(b"test");
-
-        Self {
-            name: buf,
-            len: 4 * 4096,
-            ktype: 1, // KBUF_TYPE_NONCACHE,
-            minor: Default::default(),
-            va: Default::default(),
-            pa: Default::default(),
-        }
-    }
-}
-
-fn wrap_ioctl_negative_invalid(result: Result<i32, Errno>) -> Result<i32, Errno> {
-    match result {
-        Ok(num) => match num {
-            ..=-1 => Err(Errno::UnknownErrno),
-            _ => Ok(num),
-        },
-        Err(e) => Err(e),
-    }
-}
-
-fn kbuf_use_new_buf(arm_write_addr: u32) -> Result<UserWrapperBufData, Errno> {
-    let mut buf_data = KBufBufData::default(); // Maybe should be dynamic?
-    buf_data.pa = arm_write_addr;
-
-    let mgr_fd = open("/dev/kbuf-mgr-0", OFlag::O_RDWR, Mode::empty())
-        .expect("Failed to open kbuf manager device"); // Todo: include error type for this
-
-    let mgr_fd_raw = mgr_fd.as_raw_fd();
-
-    println!("{:#?}", &buf_data);
-
-    unsafe { wrap_ioctl_negative_invalid(kbuf_mgr_dev_create_buf(mgr_fd_raw, &mut buf_data))? };
-
-    let name_len = buf_data
-        .name
-        .iter()
-        .position(|&b| b == 0)
-        .unwrap_or(buf_data.name.len());
-    let map_dev_path = format!("/dev/kbuf-map-{}-{}", buf_data.minor, unsafe {
-        str::from_utf8_unchecked(&buf_data.name[..name_len])
-    });
-
-    println!("Mapping kbuf device at path: {}", map_dev_path);
-
-    let map_fd = open(map_dev_path.as_str(), OFlag::O_RDWR, Mode::empty())
-        .expect("Failed to open map device"); // Todo: include error type for this
-
-    let addr = unsafe {
-        MmapOptions::new()
-            .len(buf_data.len as usize)
-            .map_mut(&map_fd)
-            .unwrap()
-    };
-
-    Ok(UserWrapperBufData {
-        buf: buf_data,
-        mgr_fd,
-        map_fd,
-        addr,
-    })
-}
+mod sharespace;
+mod util;
 
 #[repr(C)]
 #[derive(Default, Debug)]
@@ -236,7 +57,7 @@ impl MsgHead {
 
 struct CommunicationHandler {
     sharespace: Sharespace,
-    user_buf: UserWrapperBufData,
+    pub user_buf: UserWrapperBufData,
     arm_head: MsgHead,
     dsp_head: MsgHead,
 }
@@ -476,23 +297,27 @@ fn main() {
     let mut i = 1;
 
     loop {
-        if msgbox
-            .msgbox_read_signal(handler.arm_head.read_addr as u16)
-            .is_ok()
-        {
-            std::thread::sleep(Duration::from_millis(100));
-            println!("Got signal!");
-            let data = handler.dsp_mem_read();
+        if msgbox.msgbox_has_signal() {
+            if msgbox
+                .msgbox_read_signal(handler.arm_head.read_addr as u16)
+                .is_ok()
+            {
+                std::thread::sleep(Duration::from_millis(100));
+                println!("Got signal!");
+                let data = handler.dsp_mem_read();
 
-            println!(
-                "{}",
-                data.iter()
-                    .map(|b| format!("{:02X}", b))
-                    .collect::<Vec<String>>()
-                    .join("")
-            );
+                println!(
+                    "{}",
+                    data.iter()
+                        .map(|b| format!("{:02X}", b))
+                        .collect::<Vec<String>>()
+                        .join("")
+                );
+            } else {
+                println!("Got error, probably nothing to read...");
+            }
         } else {
-            println!("Got error, probably nothing to read...");
+            println!("No signal");
         }
 
         if i % 3 == 0 {
