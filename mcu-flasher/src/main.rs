@@ -100,8 +100,11 @@ fn main() {
             args.device
         );
 
-        port.write(b"a").expect("Failed to write to port");
-        port.flush().unwrap();
+        for _ in 0..16 {
+            port.write(b"a").expect("Failed to write to port");
+            port.flush().unwrap();
+        }
+
         return;
     }
 

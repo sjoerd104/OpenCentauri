@@ -100,6 +100,6 @@ fn main() {
     loop {
         read_dsp(&mut msgbox, &mut handler, &mut master);
         write_dsp(&mut msgbox, &mut handler, &mut master);
-        std::thread::sleep(Duration::from_millis(10));
+        std::thread::sleep(Duration::from_millis(2));
     }
 }
