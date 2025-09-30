@@ -34,8 +34,8 @@ pub struct DspSharespace {
 }
 
 enum ChooseShareSpace {
-    CHOOSE_DSP_WRITE_SPACE = 0,
-    CHOOSE_ARM_WRITE_SPACE = 1,
+    ChooseDspWriteSpace = 0,
+    ChooseArmWriteSpace = 1,
 }
 
 ioctl_readwrite_bad!(read_debug_message, 0x01, DspSharespace);
@@ -52,8 +52,8 @@ fn choose_sharespace(
     println!("Before choose: {:#?}", msg);
 
     msg.mmap_phy_addr = match choose {
-        ChooseShareSpace::CHOOSE_DSP_WRITE_SPACE => msg.dsp_write_addr,
-        ChooseShareSpace::CHOOSE_ARM_WRITE_SPACE => msg.arm_write_addr,
+        ChooseShareSpace::ChooseDspWriteSpace => msg.dsp_write_addr,
+        ChooseShareSpace::ChooseArmWriteSpace => msg.arm_write_addr,
     };
 
     wrap_ioctl_negative_invalid(unsafe { write_debug_message(raw_fd, msg) })?;
@@ -82,7 +82,7 @@ pub fn sharespace_mmap() -> Sharespace {
     choose_sharespace(
         &fd,
         &mut dsp_sharespace,
-        ChooseShareSpace::CHOOSE_ARM_WRITE_SPACE,
+        ChooseShareSpace::ChooseArmWriteSpace,
     )
     .unwrap();
 
