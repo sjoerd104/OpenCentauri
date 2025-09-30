@@ -40,7 +40,6 @@ enum ChooseShareSpace
 {
     CHOOSE_DSP_WRITE_SPACE = 0,
     CHOOSE_ARM_WRITE_SPACE = 1,
-    CHOOSE_DSP_LOG_SPACE = 2,
 }
 
 ioctl_readwrite_bad!(read_debug_message, 0x01, DspSharespace);
@@ -59,7 +58,6 @@ fn choose_sharespace(fd : &OwnedFd, msg : &mut DspSharespace, choose : ChooseSha
     {
         ChooseShareSpace::CHOOSE_DSP_WRITE_SPACE => msg.dsp_write_addr,
         ChooseShareSpace::CHOOSE_ARM_WRITE_SPACE => msg.arm_write_addr,
-        ChooseShareSpace::CHOOSE_DSP_LOG_SPACE => msg.dsp_log_addr,
     };
 
     wrap_ioctl_negative_invalid(unsafe { write_debug_message(raw_fd, msg) })?;
@@ -79,7 +77,6 @@ struct Sharespace
 {
     fd: OwnedFd,
     dsp_sharespace : DspSharespace,
-    read_buffer : Mmap, // DSP buffer - pu8DspBuf
     write_buffer : MmapMut // ARM buffer - pu8ArmBuf
 }
 
@@ -94,16 +91,9 @@ fn sharespace_mmap() -> Sharespace
         MmapOptions::new().len(0x1000).map_mut(&fd).unwrap()
     };
 
-    choose_sharespace(&fd, &mut dsp_sharespace, ChooseShareSpace::CHOOSE_DSP_WRITE_SPACE).unwrap();
-
-    let read_buffer = unsafe {
-        MmapOptions::new().len(0x1000).map(&fd).unwrap()
-    };
-
     Sharespace {
         fd,
         dsp_sharespace,
-        read_buffer,
         write_buffer
     }
 }
@@ -181,7 +171,7 @@ fn kbuf_use_new_buf(arm_write_addr : u32) -> Result<UserWrapperBufData, Errno>
 
     println!("{:#?}", &buf_data);
 
-    let ret = unsafe {
+    unsafe {
         wrap_ioctl_negative_invalid(kbuf_mgr_dev_create_buf(mgr_fd_raw, &mut buf_data))?
     };
 
@@ -248,13 +238,11 @@ struct CommunicationHandler
     user_buf : UserWrapperBufData,
     arm_head : MsgHead,
     dsp_head : MsgHead,
-    sharespace_arm_addr_read : u32,
-    sharespace_arm_addr_write : u32,
-    msgbox_send_addr_read : u32,
-    msgbox_send_addr_write : u32,
 }
 
 const SHARE_SPACE_HEAD_OFFSET : usize = 4096 - size_of::<MsgHead>();
+const MIN_ADDR : usize = size_of::<MsgHead>();
+const MAX_ADDR : usize = SHARE_SPACE_HEAD_OFFSET;
 
 impl CommunicationHandler
 {
@@ -272,10 +260,6 @@ impl CommunicationHandler
             user_buf,
             arm_head,
             dsp_head,
-            sharespace_arm_addr_read: size_of::<MsgHead>() as u32,
-            sharespace_arm_addr_write: size_of::<MsgHead>() as u32,
-            msgbox_send_addr_read: size_of::<MsgHead>() as u32,
-            msgbox_send_addr_write: size_of::<MsgHead>() as u32,
         };
 
         communication_handler.write_arm_head();
@@ -334,7 +318,9 @@ impl CommunicationHandler
 
     unsafe fn invalidate_read_buffer(&mut self)
     {
-        msync(self.user_buf.addr.as_mut_ptr().add(4096) as *mut c_void, 4096, MS_INVALIDATE);
+        unsafe {
+            msync(self.user_buf.addr.as_mut_ptr().add(4096) as *mut c_void, 4096, MS_INVALIDATE);
+        }
     }
 
     fn wait_dsp_set_init(&mut self)
@@ -354,8 +340,6 @@ impl CommunicationHandler
             if self.dsp_head.init_state == 1
             {
                 println!("Yay!");
-                self.sharespace_arm_addr_read = self.dsp_head.read_addr;
-                self.sharespace_arm_addr_write = self.dsp_head.write_addr;
                 break;
             }
 
@@ -365,9 +349,6 @@ impl CommunicationHandler
 
     fn dsp_mem_read(&mut self) -> Vec<u8>
     {
-        let min_addr = size_of::<MsgHead>();
-        let max_addr = SHARE_SPACE_HEAD_OFFSET;
-
         self.read_dsp_head();
 
         if self.arm_head.read_addr == self.dsp_head.write_addr
@@ -376,7 +357,6 @@ impl CommunicationHandler
         }
 
         let mut msg_start_addr: usize = self.arm_head.read_addr as usize;
-        let msg_end_addr: usize = self.dsp_head.write_addr as usize;
         let msg_size: usize;
 
         if self.arm_head.read_addr < self.dsp_head.write_addr
@@ -384,37 +364,33 @@ impl CommunicationHandler
             msg_size = (self.dsp_head.write_addr - self.arm_head.read_addr) as usize;
         }
         else {
-            msg_size = max_addr - min_addr - ((self.arm_head.read_addr - self.dsp_head.write_addr) as usize);
+            msg_size = MAX_ADDR - MIN_ADDR - ((self.arm_head.read_addr - self.dsp_head.write_addr) as usize);
         }
 
         let mut result;
 
-        if msg_start_addr + msg_size <= max_addr
+        if msg_start_addr + msg_size <= MAX_ADDR
         {
             result = self.get_read_slice()[msg_start_addr..msg_start_addr + msg_size].to_vec();
 
             msg_start_addr += msg_size;
 
-            if msg_start_addr >= max_addr
+            if msg_start_addr >= MAX_ADDR
             {
-                msg_start_addr = min_addr
+                msg_start_addr = MIN_ADDR;
             }
         }
         else  
         {
-            let len1 = max_addr - msg_start_addr;
+            let len1 = MAX_ADDR - msg_start_addr;
             result = self.get_read_slice()[msg_start_addr..msg_start_addr + len1].to_vec();
-            result.extend(self.get_read_slice()[min_addr..min_addr + msg_size - len1].to_vec());
-            msg_start_addr = min_addr + msg_size - len1;
+            result.extend(self.get_read_slice()[MIN_ADDR..MIN_ADDR + msg_size - len1].to_vec());
+            msg_start_addr = MIN_ADDR + msg_size - len1;
         }
 
         if msg_size > 0
         {
             self.arm_head.read_addr = msg_start_addr as u32;
-        }
-        else 
-        {
-            self.sharespace_arm_addr_read = self.arm_head.read_addr;
         }
 
         return result;
@@ -422,14 +398,7 @@ impl CommunicationHandler
 
     fn dsp_mem_write(&mut self, msgbox_endpoint : &mut MsgboxEndpoint, data : &[u8])
     {
-        // TODO: make constant
-        let min_addr = size_of::<MsgHead>();
-        let max_addr = SHARE_SPACE_HEAD_OFFSET;
         let mut len = data.len();
-
-        let mut msg_start_addr: usize = self.arm_head.read_addr as usize;
-        let msg_end_addr: usize = self.dsp_head.write_addr as usize;
-        let msg_size: usize;
 
         if len > 4000 || len <= 0
         {
@@ -445,7 +414,7 @@ impl CommunicationHandler
         
         if self.dsp_head.read_addr <= self.arm_head.write_addr
         {
-            free_size = max_addr - min_addr - (self.arm_head.write_addr - self.dsp_head.read_addr) as usize;
+            free_size = MAX_ADDR - MIN_ADDR - (self.arm_head.write_addr - self.dsp_head.read_addr) as usize;
             if free_size <= len
             {
                 panic!("Good job");
@@ -461,21 +430,21 @@ impl CommunicationHandler
         }
 
         let mut pmsg = self.arm_head.write_addr as usize;
-        if pmsg + len <= max_addr
+        if pmsg + len <= MAX_ADDR
         {
             self.get_write_slice()[pmsg..pmsg + len].copy_from_slice(data);
             pmsg += len;
-            if pmsg >= max_addr
+            if pmsg >= MAX_ADDR
             {
-                pmsg = min_addr;
+                pmsg = MIN_ADDR;
             }
         } 
         else {
-            let len1 = max_addr - self.arm_head.write_addr as usize;
+            let len1 = MAX_ADDR - self.arm_head.write_addr as usize;
             self.get_write_slice()[pmsg..pmsg + len1].copy_from_slice(&data[..len1]);
             len -= len1;
-            self.get_write_slice()[min_addr..min_addr + len].copy_from_slice(&data[len1..]);
-            pmsg = min_addr + len;
+            self.get_write_slice()[MIN_ADDR..MIN_ADDR + len].copy_from_slice(&data[len1..]);
+            pmsg = MIN_ADDR + len;
         }
 
         self.arm_head.write_addr = pmsg as u32;
@@ -489,36 +458,6 @@ impl CommunicationHandler
 }
 
 fn main() {
-/*
-    let map_fd = open(
-        "/dev/kbuf-map-1-test",
-        OFlag::O_RDWR,
-        Mode::empty(),
-    ).expect("Failed to open map device"); // Todo: include error type for this
-
-    let addr = unsafe {
-        MmapOptions::new().len(4 * 4096).map_mut(&map_fd).unwrap()
-    };
-
-            println!(
-            "Write slice: {}",
-            addr[..4096].iter()
-                .map(|b| format!("{:02X}", b))
-                .collect::<Vec<String>>()
-                .join("")
-             );
-
-                println!(
-            "Read slice: {}",
-            addr[4096..8192].iter()
-                .map(|b| format!("{:02X}", b))
-                .collect::<Vec<String>>()
-                .join("")
-             );
-
-
-    return;
-*/
     println!("Hello, world!");
     let mmap = sharespace_mmap();
     println!("Got sharespace mmap!");
