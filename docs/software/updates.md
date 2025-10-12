@@ -74,18 +74,15 @@ Raw response:
 }
 ```
 
-### v1.1.29 (Released 18/06/2025)
+### v1.1.40 (Released 15/08/2025)
 
-[Download](https://download.chitubox.com/chitusystems/chitusystems/public/printer/firmware/release/1/ca8e1d9a20974a5896f8f744e780a8a7/1/1.1.29/2025-06-18/810e5a7e9518452c9172e11a7d04a683.bin){  referrerpolicy="no-referrer" .md-button .md-button--primary }
+[Download](https://s3.devminer.xyz/archive/ELEGOO_Centauri_Update_1.1.40.bin){  referrerpolicy="no-referrer" .md-button .md-button--primary }
 
 Changelog:
 
-1. Fixed several issues that could cause unexpected print interruptions.
-2. Added thermal protection for the extruder during homing.
-3. Resolved UI display issues when the machine encounters an error.
-4. Addressed occasional issues with web-based controls.
-5. Fixed bugs that could prevent time-lapse videos from exporting properly.
-6. Improved USB drive compatibility to fix occasional reading errors.
+1. Fixed some known bugs.
+2. Added Ukrainian and Turkish language support.
+3. Resolved compatibility issues with the Wi-Fi module.
 
 Raw response:
 
@@ -107,6 +104,19 @@ Raw response:
     "success": true
 }
 ```
+
+### v1.1.29 (Released 18/06/2025)
+
+[Download](https://download.chitubox.com/chitusystems/chitusystems/public/printer/firmware/release/1/ca8e1d9a20974a5896f8f744e780a8a7/1/1.1.29/2025-06-18/810e5a7e9518452c9172e11a7d04a683.bin){  referrerpolicy="no-referrer" .md-button .md-button--primary }
+
+Changelog:
+
+1. Fixed several issues that could cause unexpected print interruptions.
+2. Added thermal protection for the extruder during homing.
+3. Resolved UI display issues when the machine encounters an error.
+4. Addressed occasional issues with web-based controls.
+5. Fixed bugs that could prevent time-lapse videos from exporting properly.
+6. Improved USB drive compatibility to fix occasional reading errors.
 
 ### v1.1.25 (Released 9/05/2025)
 
