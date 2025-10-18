@@ -33,6 +33,7 @@ If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/op
 
 1. Download the centauri_carbon_developer_mode executable and run it on a computer on the same network as your Centauri Carbon. Follow the on scren instructions to enable developer mode.
     - [Windows build (x64)](https://drive.google.com/file/d/1CROOzsOPZa0S_523WJcTDxCNBs5pvNRz/view?usp=sharing){target="_blank"}
+    - [Macos build (Universal)](https://drive.google.com/file/d/1N6l0DHo1PaB8TD3hzHAWicqE6ILId-LG/view?usp=sharing){target="_blank"}
     - [Linux build (x64)](https://drive.google.com/file/d/1hPIMx2H8KXDDGo888rHW8m7f7IMhWHur/view?usp=sharing){target="_blank"}
 2. Insert a fat32-formatted thumbdrive into your pc.
 3. Remove `update.bin` if this is present on your thumbdrive.
