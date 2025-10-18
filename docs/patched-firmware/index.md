@@ -8,8 +8,6 @@ If you find any bugs with this firmware, or want to suggest new features, please
 
 This project is in a beta state currently, expect some issues!
 
-This new firmware goes well with [modified machine start and end gcode in OrcaSlicer](./modified_start_end_machine_gcode.md). Specifically to center the purge line and turn on the light of the printer after starting a print.
-
 If you need any support, feel free to [join the discord](https://discord.gg/t6Cft3wNJ3)
 
 If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/opencentauri) :heart:!
@@ -46,6 +44,8 @@ If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/op
 9. Remove the thumbdrive after the machine reboots.
 
 You should now be greeted by the OpenCentauri splash screen :tada:
+
+This new firmware goes well with [modified machine start and end gcode in OrcaSlicer](./modified_start_end_machine_gcode.md). Specifically to center the purge line and to turn on the light of the chamber after starting a print. Installing this is optional but reccomended.
 
 ## Update
 
