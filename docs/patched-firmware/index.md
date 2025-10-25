@@ -10,9 +10,9 @@ This project is in a beta state currently, expect some issues!
 
 If you need any support, feel free to [join the discord](https://discord.gg/t6Cft3wNJ3)
 
-If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/opencentauri) :heart:!
+If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/opencentauri) :heart:! If spending money isn't your thing, we also have a [Makerworld page](https://makerworld.com/en/models/1924078-opencentauri-logo#profileId-2064746) where you can throw some boosts towards!
 
-## Features (as of v0.1.0)
+## Features (as of v0.2.0)
 
 - SSH (user: "root", password: "OpenCentauri")
 - Developer features (package manager, prevent booting Klipper, etc)
@@ -23,6 +23,9 @@ If you'd like to support our work, you can do so on [Ko-Fi](https://ko-fi.com/op
     - Note: On Elegoo filaments present in OrcaSlicer, the `Exhaust fan` section present on the Cooling tab inside of a Filament profile is respected. If it is enabled, then exhaust fan will turn on at the specified speed.
 - Homing position has been set to the front right instead of the front left
 - The webui (and other integrations like octoeverywhere and home assistant) now accepts modifications during a print (bug introduced in firmware 1.1.29)
+- The webui's store button has been removed
+- The webui's logo has been replaced with an OpenCentauri logo
+- Allow editing Z offset while the printer is idle
 - Connectivity checks (web traffic issue) have been blocked
 - OTA updates have been blocked
 - New gcode commands: 
