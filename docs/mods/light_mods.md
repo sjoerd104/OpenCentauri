@@ -46,7 +46,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
    ![LED placement](LED.png)  
     On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
 
-    It should look something like this
+    It should look something like this  
     ![LED Soldered](LED_SOLDERED.png)
 4. (Optional) Replace **resistor R18** with **27 Ω** if higher brightness is desired.  
     ![Resistor R18](R18.png)
