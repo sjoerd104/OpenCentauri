@@ -112,9 +112,9 @@ The pictures below were taken with a 30 Ω resistor installed. Expect noticeably
 
 | Before | After |
 |:-------:|:------:|
-| <img src="../mods/assets/Nolights.jpg" height="280"><br>*No illumination* | <img src="../mods/assets/NozzleLED.jpg" height="280"><br>*Nozzle LED on* |
-| <img src="../mods/assets/Chamber.jpg" height="280"><br>*Stock chamber LEDs only* | <img src="../mods/assets/Chamber_NozzleLED.jpg" height="280"><br>*Both LEDs active* |
-| <img src="../mods/assets/Benchy_chamber.jpg" height="200"><br>*Chamber LEDs on* | <img src="../mods/assets/Benchy_chamber_nozzle.jpg" height="200"><br>*Chamber & Nozzle LEDs on* |
+| <img src="/OpenCentauri/mods/assets/Nolights.jpg" height="280"><br>*No illumination* | <img src="/OpenCentauri/mods/assets/NozzleLED.jpg" height="280"><br>*Nozzle LED on* |
+| <img src="/OpenCentauri/mods/assets/Chamber.jpg" height="280"><br>*Stock chamber LEDs only* | <img src="/OpenCentauri/mods/assets/Chamber_NozzleLED.jpg" height="280"><br>*Both LEDs active* |
+| <img src="/OpenCentauri/mods/assets/Benchy_chamber.jpg" height="200"><br>*Chamber LEDs on* | <img src="/OpenCentauri/mods/assets/Benchy_chamber_nozzle.jpg" height="200"><br>*Chamber & Nozzle LEDs on* |
 | *Credit to _sjoerd on the OpenCentauri Discord.* | *Credit to _sjoerd on the OpenCentauri Discord.* |
 
 
