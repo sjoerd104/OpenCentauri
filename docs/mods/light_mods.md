@@ -109,10 +109,14 @@ We'd recommend putting it at the top of Machine Start G-code and at the bottom o
 
 ## Before & After  
 
-After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to monitor prints and improving toolhead illumination.  
+After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to see prints and improving toolhead illumination.  
 
 Before|After
 ---|---
+![No lights](assets/Nolights.jpg)|![Nozzle LED](assets/NozzleLED.jpg)
+![Chamber light](assets/Chamber.jpg)|![Chamber & Nozzle LED](assets/Chamber_NozzleLED.jpg)  
+![Benchy Chamber light](assets/Benchy_chamber.jpg)|![Benchy Chamber & Nozzle LED](assets/Benchy_chamber_nozzle.jpg)  
+*Credit to _sjoerd on the OpenCentauri Discord.*|*Credit to _sjoerd on the OpenCentauri Discord.*
 
 ## Credits  
 [Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, his video can be found [here](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg).
