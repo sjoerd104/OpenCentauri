@@ -29,4 +29,5 @@ jobs:
             pymdown-extensions
 
       # Build and deploy to GitHub Pages
-      - run: mkdocs gh-deploy --force
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force --remote-branch gh-pages
