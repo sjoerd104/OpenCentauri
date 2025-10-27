@@ -3,8 +3,8 @@
 This section describes how and where to solder and use the **missing nozzle LED** on the Centauri Carbon toolhead.  
 It also includes instructions on **replacing the existing resistor** to increase the LED brightness for better visibility during prints.
 
-Most Centauri Carbon printers ship with the MOSFET circuit for the nozzle LED already present, but the LED itself is unpopulated.  
-The current-limiting resistor is also populated, though its value (100 Ω) results in a dim LED once installed.  
+The Centauri Carbon ships with the MOSFET circuit for the nozzle LED already present, but the LED itself is unpopulated.  
+The current-limiting resistor is also populated, though its value (100 Ω) results in a dim LED once installed, drawing only 20mA.  
 With a few quick soldering steps, you can enable and tune this feature.
 
 If you need any support, feel free to [join the Discord](https://discord.gg/t6Cft3wNJ3)  
@@ -23,7 +23,8 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
   Helpful when soldering the 5730 LED, as it has three pads.  
   The center pad is used for heat transfer to the PCB, but it’s not required for this mod since the LED runs well below its maximum temperature, even in warm chambers.
 - **Resistor:** [27 Ω SMD resistor (0603 size)](https://aliexpress.com/item/1005005677654015.html)  
-  Replaces the stock **100 Ω** resistor to make the LED brighter.
+  Replaces the stock **100 Ω** resistor to make the LED brighter, increases the current from 20mA to 75mA. The forward voltage increases from 2.72V to 2.92V.  
+  These values will differ slightly from LED to LED. 
 
 
 ## Overview  
@@ -112,7 +113,6 @@ After completing this modification, your Centauri Carbon gains a **fully functio
 
 Before|After
 ---|---
-
 
 ## Credits  
 [Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, his video can be found [here](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg).
