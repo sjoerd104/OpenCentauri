@@ -110,6 +110,7 @@ We'd recommend putting it at the top of Machine Start G-code and at the bottom o
 ## Before & After  
 
 After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to see prints and improving toolhead illumination.  
+The pictures below were taken with a 30 Ω resistor installed. Expect noticeably less brightness if you don’t replace R18.
 
 Before|After
 ---|---
