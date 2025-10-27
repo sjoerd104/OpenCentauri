@@ -2,7 +2,7 @@ name: Deploy MkDocs site
 on:
   push:
     branches:
-      - main  # change to 'master' if your default branch is master
+      - main   # change to 'master' if your default branch is named that
   workflow_dispatch:
 
 permissions:
@@ -13,8 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: pip install mkdocs-material mkdocs-glightbox
+
+      # Install MkDocs + all likely plugins used in OpenCentauri
+      - run: |
+          pip install \
+            mkdocs-material \
+            mkdocs-glightbox \
+            mkdocs-git-committers-plugin-2 \
+            mkdocs-git-revision-date-localized-plugin \
+            mkdocs-minify-plugin \
+            pymdown-extensions
+
+      # Build and deploy to GitHub Pages
       - run: mkdocs gh-deploy --force
