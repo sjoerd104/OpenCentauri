@@ -56,7 +56,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
     *Credit to _sjoerd on the OpenCentauri Discord.*   
 
 4. (Optional) Replace **resistor R18** with **27 Ω** if higher brightness is desired.  
-    ![Resistor R18](assets/R18.png)  
+    ![Resistor R18](assets/R18.jpg)  
     *Credit to _sjoerd on the OpenCentauri Discord.*  
 
 5. Reassemble the toolhead.  
