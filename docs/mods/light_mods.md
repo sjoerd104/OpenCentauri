@@ -1,7 +1,7 @@
 # Toolhead Nozzle LED Installation and Configuration  
 
 This section describes how and where to solder and use the **missing nozzle LED** on the Centauri Carbon toolhead.  
-It also includes instructions on **replacing the existing resistor** to increase the LED brightness for better visibility during prints.
+It also includes instructions on **replacing the existing resistor** to increase the LED brightness.
 
 The Centauri Carbon includes a MOSFET circuit for a nozzle LED, but the LED itself is unpopulated.  
 The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.
@@ -15,7 +15,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 - **Soldering iron**  
   Used to solder the LED and (optionally) replace the resistor.
 - **LED:** [WHITE 5730 LED (Cold White)](https://aliexpress.com/item/1005005760920669.html)   
-  Choose the **WHITE 5730** variant — it matches the cold white tone of the chamber LED.
+  Choose the **WHITE 5730** variant — it should match the cold white tone of the chamber LED.
 
 ### Optional  
 - **Hot air gun**  
