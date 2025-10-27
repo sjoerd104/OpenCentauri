@@ -61,7 +61,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 5. Reassemble the toolhead.  
 
 !!! warning "Note"   
-    We recommend against going for a lower resistance than 27 Ω, as the LED may run too hot when the chamber gets hot.
+    We recommend against going for a lower resistance than 27 Ω, as the LED may run too hot when the chamber gets up to temperature.
 
 
 ## Klipper Configuration  
@@ -106,18 +106,13 @@ This will automatically turn the LED **on** when a print starts and **off** when
 We'd recommend putting it at the top of Machine Start G-code and at the bottom of Machine End G-code
 
 
-## Summary  
+## Before & After  
 
-| Item | Description |
-|------|--------------|
-| **Control Pin** | PC9 |
-| **Default Resistor** | 100 Ω |
-| **Recommended Replacement** | 27 Ω |
-| **LED Type** | Cold White 5730 SMD |
+After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to monitor prints and improving toolhead illumination.  
 
+Before|After
+---|---
 
-
-After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to monitor prints and improving toolhead illumination.
 
 ## Credits  
 [Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, his video can be found [here](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg).
