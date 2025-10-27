@@ -3,9 +3,8 @@
 This section describes how and where to solder and use the **missing nozzle LED** on the Centauri Carbon toolhead.  
 It also includes instructions on **replacing the existing resistor** to increase the LED brightness for better visibility during prints.
 
-The Centauri Carbon ships with the MOSFET circuit for the nozzle LED already present, but the LED itself is unpopulated.  
-The current-limiting resistor is also populated, though its value (100 Ω) results in a dim LED once installed, drawing only 20mA.  
-With a few quick soldering steps, you can enable and tune this feature.
+The Centauri Carbon includes a MOSFET circuit for a nozzle LED, but the LED itself is unpopulated.  
+The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.
 
 If you need any support, feel free to [join the Discord](https://discord.gg/t6Cft3wNJ3)  
 
@@ -62,7 +61,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 5. Reassemble the toolhead.  
 
 !!! warning "Note"   
-    We recommend against going for a lower resistance than 27 Ω, as the LED may run too hot when the chamber gets up to temperature.
+    We recommend against going below 27 Ω, as the LED may overheat in high-temperature chamber conditions.
 
 
 ## Klipper Configuration  
@@ -75,7 +74,7 @@ red_pin: stm32:PC9
 cycle_time: 0.016
 ```
 
-No additional configuration is required.
+No additional configuration is required here.
 
 
 ## Testing  
@@ -91,15 +90,15 @@ If your LED lights up correctly when running `LED_ON.gcode` and turns off with `
 
 Add the following lines to your slicer’s machine start and end G-code to automatically control the nozzle LED:
 
-
-### Machine Start G-code  
-```gcode
+### Machine Start G-code
+```
 SET_LED_led1 RED=1 GREEN=1 BLUE=1 WHITE=1 TRANSMIT=1
 ```
-
+ 
 
 ### Machine End G-code  
-```gcode
+
+```
 SET_LED_led1 RED=0 GREEN=0 BLUE=0 WHITE=0 TRANSMIT=1
 ```
 
