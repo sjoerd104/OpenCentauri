@@ -103,20 +103,20 @@ SET_LED_led1 RED=0 GREEN=0 BLUE=0 WHITE=0 TRANSMIT=1
 ```
 
 This will automatically turn the LED **on** when a print starts and **off** when it finishes.  
-We'd recommend putting it at the top of Machine Start G-code and at the bottom of Machine End G-code
+We'd recommend putting it at the top of Machine Start G-code and at the bottom of Machine End G-code.  
 
 
 ## Before & After  
+ 
+The pictures below were taken with a 30 Ω resistor installed. Expect noticeably less brightness if you don’t replace R18.  
 
-After completing this modification, your Centauri Carbon gains a **fully functional and bright nozzle LED**, making it easier to see prints and improving toolhead illumination.  
-The pictures below were taken with a 30 Ω resistor installed. Expect noticeably less brightness if you don’t replace R18.
+| Before | After |
+|:-------:|:------:|
+| <img src="assets/Nolights.jpg" height="280"><br>*No illumination* | <img src="assets/NozzleLED.jpg" height="280"><br>*Nozzle LED on* |
+| <img src="assets/Chamber.jpg" height="280"><br>*Stock chamber LEDs only* | <img src="assets/Chamber_NozzleLED.jpg" height="280"><br>*Both LEDs active* |
+| <img src="assets/Benchy_chamber.jpg" height="200"><br>*Chamber LEDs on* | <img src="assets/Benchy_chamber_nozzle.jpg" height="200"><br>*Chamber & Nozzle LEDs on* |
+| *Credit to _sjoerd on the OpenCentauri Discord.* | *Credit to _sjoerd on the OpenCentauri Discord.* |
 
-Before|After
----|---
-![No lights](assets/Nolights.jpg)|![Nozzle LED](assets/NozzleLED.jpg)
-![Chamber light](assets/Chamber.jpg)|![Chamber & Nozzle LED](assets/Chamber_NozzleLED.jpg)  
-![Benchy Chamber light](assets/Benchy_chamber.jpg)|![Benchy Chamber & Nozzle LED](assets/Benchy_chamber_nozzle.jpg)  
-*Credit to _sjoerd on the OpenCentauri Discord.*|*Credit to _sjoerd on the OpenCentauri Discord.*
 
 ## Credits  
 [Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, his video can be found [here](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg).
