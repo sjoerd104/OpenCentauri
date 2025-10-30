@@ -1,7 +1,7 @@
 # Toolhead Nozzle LED Installation and Configuration  
 
-This section describes how and where to solder and use the **missing nozzle LED** on the Centauri Carbon toolhead.  
-It also includes instructions on **replacing the existing resistor** to increase the LED brightness.
+This section describes how and where to solder and use the missing nozzle LED on the Centauri Carbon toolhead.  
+It also includes instructions on replacing the existing resistor to increase the LED brightness.
 
 The Centauri Carbon includes a MOSFET circuit for a nozzle LED, but the LED itself is unpopulated.  
 The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.
@@ -28,7 +28,7 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 
 ## Overview  
 
-- The toolhead PCB includes a **nozzle LED circuit** controlled by **MCU pin PC9**.  
+- The toolhead PCB includes a nozzle LED circuit controlled by MCU pin PC9.  
 - The **LED + side** connects to the **+5 V rail** (always powered).  
 - The **LED – side** is switched through a MOSFET, controlled by the firmware.  
 - The **current-limiting resistor (R18)** is already present on the PCB but its value limits brightness heavily.
@@ -36,45 +36,27 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 
 ## Installation  
 
-1. Locate the **LED pads** on the front edge of the toolhead PCB. 
+### 1. Locate the LED pads on the front edge of the toolhead PCB. 
 ![PCB LED pads](assets/PCB_LED.png)  
-*Credit to _sjoerd on the OpenCentauri Discord.*  
 
-2. **Orientation:**  
-   Align the LED so the wider gaps match the PCB pattern before soldering.   
-   Additionally, the PCB has a **white line** marking on the **negative side** for easy orientation.  
+### 2. Orientation:  
+  Align the LED so the wider gaps match the PCB pattern before soldering.   
+  Additionally, the PCB has a **white line** marking on the **negative side** for easy orientation.  
    
-3. Solder the **white 5730 LED** onto the existing footprint:  
-   ![LED placement](assets/LED.png)  
-   *Credit to _sjoerd on the OpenCentauri Discord.*  
+### 3. Solder the white 5730 LED onto the existing footprint:  
+  ![LED placement](assets/LED.png)  
+  On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
 
-    On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
+  It should look something like this:  
+  ![LED Soldered](assets/LED_SOLDERED.png)   
 
-    It should look something like this:  
-    ![LED Soldered](assets/LED_SOLDERED.png)  
-    *Credit to _sjoerd on the OpenCentauri Discord.*   
+### 4. (Optional) Replace resistor R18 with 27 Ω if higher brightness is desired.  
+  ![Resistor R18](assets/R18.jpg)  
 
-4. (Optional) Replace **resistor R18** with **27 Ω** if higher brightness is desired.  
-    ![Resistor R18](assets/R18.jpg)  
-    *Credit to _sjoerd on the OpenCentauri Discord.*  
-
-5. Reassemble the toolhead.  
+### 5. Reassemble the toolhead.  
 
 !!! warning "Note"   
     We recommend against going below 27 Ω, as the LED may overheat in high-temperature chamber conditions.
-
-
-## Klipper Configuration  
-
-The Centauri Carbon's printer.cfg already includes this LED definition:
-
-```ini
-[led led1]
-red_pin: stm32:PC9
-cycle_time: 0.016
-```
-
-No additional configuration is required here.
 
 
 ## Testing  
@@ -112,14 +94,15 @@ The pictures below were taken with a 30 Ω resistor installed. Expect noticeably
 
 | Before | After |
 |:-------:|:------:|
-| <div align="center"><img src="/OpenCentauri/mods/assets/Nolights.jpg" width="350"><br><em>No LEDs on</em></div> | <div align="center"><img src="/OpenCentauri/mods/assets/NozzleLED.jpg" width="350"><br><em>Nozzle LED on</em></div> |
-| <div align="center"><img src="/OpenCentauri/mods/assets/Chamber.jpg" width="350"><br><em>Chamber LEDs on</em></div> | <div align="center"><img src="/OpenCentauri/mods/assets/Chamber_NozzleLED.jpg" width="350"><br><em>Chamber & Nozzle LEDs on</em></div> |
-| <div align="center"><img src="/OpenCentauri/mods/assets/Benchy_chamber.jpg" width="350"><br><em>Chamber LEDs on</em></div> | <div align="center"><img src="/OpenCentauri/mods/assets/Benchy_chamber_nozzle.jpg" width="350"><br><em>Chamber & Nozzle LEDs on</em></div> |
-| *Credit to _sjoerd on the OpenCentauri Discord.* | *Credit to _sjoerd on the OpenCentauri Discord.* |
+| <figure markdown="span"><img src="assets/Nolights.jpg" width="350"><figcaption><em>No LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/NozzleLED.jpg" width="350"><figcaption><em>Nozzle LED on</em></figcaption></figure> |
+| <figure markdown="span"><img src="assets/Chamber.jpg" width="350"><figcaption><em>Chamber LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/Chamber_NozzleLED.jpg" width="350"><figcaption><em>Chamber & Nozzle LEDs on</em></figcaption></figure> |
+| <figure markdown="span"><img src="assets/Benchy_chamber.jpg" width="350"><figcaption><em>Chamber LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/Benchy_chamber_nozzle.jpg" width="350"><figcaption><em>Chamber & Nozzle LEDs on</em></figcaption></figure> |
+
 
 
 
 
 ## Credits  
-[Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, his video can be found [here](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg).
+[Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, [his video on this topic](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg) can be found on his channel.  
+Guide and images by _sjoerd on the OpenCentauri Discord.
 
