@@ -106,7 +106,8 @@ The pictures below were taken with a 30 Ω resistor installed. Expect noticeably
 
 
 
-## Credits  
+## Credits
+Guide and images by _sjoerd on the OpenCentauri Discord.  
+
 [Synthetic Electron 3D](https://www.youtube.com/@SyntheticElectron3D) on YouTube for finding the unused footprint on the PCB, [his video on this topic](https://www.youtube.com/watch?v=1B1BzOQMkCI&lc=UgzqtT4OAFaG_nfkXIB4AaABAg) can be found on his channel.  
-Guide and images by _sjoerd on the OpenCentauri Discord.
 
