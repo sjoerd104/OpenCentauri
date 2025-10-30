@@ -1372,7 +1372,8 @@
 <p>This section describes how and where to solder and use the missing nozzle LED on the Centauri Carbon toolhead.<br>
 It also includes instructions on replacing the existing resistor to increase the LED brightness.</p>
 <p>The Centauri Carbon includes a MOSFET circuit for a nozzle LED, but the LED itself is unpopulated.<br>
-The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.</p>
+The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.  </p>
+<p>This modification is compatible with all firmware versions and does not require the OpenCentauri firmware.</p>
 <p>If you need any support, feel free to <a href="https://discord.gg/t6Cft3wNJ3">join the Discord</a>  </p>
 <h2 id="requirements">Requirements</h2>
 <h3 id="required">Required</h3>
@@ -1400,15 +1401,15 @@ The installed current-limiting resistor (100 Ω) results in a dim output, drawin
 </ul>
 <h2 id="installation">Installation</h2>
 <h3 id="1-locate-the-led-pads-on-the-front-edge-of-the-toolhead-pcb">1. Locate the LED pads on the front edge of the toolhead PCB.</h3>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/PCB_LED.png" data-desc-position="bottom"><img alt="PCB LED pads" src="../assets/PCB_LED.png"></a>  </p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/PCB_LED.jpg" data-desc-position="bottom"><img alt="PCB LED pads" src="../assets/PCB_LED.jpg"></a>  </p>
 <h3 id="2-orientation">2. Orientation:</h3>
 <p>Align the LED so the wider gaps match the PCB pattern before soldering. <br>
   Additionally, the PCB has a <strong>white line</strong> marking on the <strong>negative side</strong> for easy orientation.  </p>
 <h3 id="3-solder-the-white-5730-led-onto-the-existing-footprint">3. Solder the white 5730 LED onto the existing footprint:</h3>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/LED.png" data-desc-position="bottom"><img alt="LED placement" src="../assets/LED.png"></a><br>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/LED.jpg" data-desc-position="bottom"><img alt="LED placement" src="../assets/LED.jpg"></a><br>
   On the LED, the <strong>negative side</strong> can be identified by the <strong>larger gap</strong> between the center pad and the outer pad.  </p>
 <p>It should look something like this:<br>
-<a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/LED_SOLDERED.png" data-desc-position="bottom"><img alt="LED Soldered" src="../assets/LED_SOLDERED.png"></a>   </p>
+<a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/LED_SOLDERED.jpg" data-desc-position="bottom"><img alt="LED Soldered" src="../assets/LED_SOLDERED.jpg"></a>   </p>
 <h3 id="4-optional-replace-resistor-r18-with-27-if-higher-brightness-is-desired">4. (Optional) Replace resistor R18 with 27 Ω if higher brightness is desired.</h3>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/R18.jpg" data-desc-position="bottom"><img alt="Resistor R18" src="../assets/R18.jpg"></a>  </p>
 <h3 id="5-reassemble-the-toolhead">5. Reassemble the toolhead.</h3>
@@ -1482,7 +1483,7 @@ Guide and images by _sjoerd on the OpenCentauri Discord.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"></path></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 30, 2025 19:54:27 UTC">October 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 30, 2025 20:04:17 UTC">October 30, 2025</span>
   </span>
 
     
