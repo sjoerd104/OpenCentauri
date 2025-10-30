@@ -64,8 +64,8 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 ## Testing  
 You can manually test the nozzle LED by running the following G-code files directly from your printer’s touchscreen or web interface:
 
-- [**LED_ON.gcode**](assets/LED_ON.gcode) — turns the nozzle LED **on**  
-- [**LED_OFF.gcode**](assets/LED_OFF.gcode) — turns the nozzle LED **off**
+- [**LED_ON.gcode**](assets/LED_ON.gcode) — turns the nozzle LED on  
+- [**LED_OFF.gcode**](assets/LED_OFF.gcode) — turns the nozzle LED off
 
 If your LED lights up correctly when running `LED_ON.gcode` and turns off with `LED_OFF.gcode`, the installation is successful.
 
