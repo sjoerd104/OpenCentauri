@@ -96,10 +96,12 @@ The pictures below were taken with a 30 Ω resistor installed. Expect noticeably
 
 | Before | After |
 |:-------:|:------:|
-| <figure markdown="span"><img src="assets/Nolights.jpg" width="350"><figcaption><em>No LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/NozzleLED.jpg" width="350"><figcaption><em>Nozzle LED on</em></figcaption></figure> |
-| <figure markdown="span"><img src="assets/Chamber.jpg" width="350"><figcaption><em>Chamber LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/Chamber_NozzleLED.jpg" width="350"><figcaption><em>Chamber & Nozzle LEDs on</em></figcaption></figure> |
-| <figure markdown="span"><img src="assets/Benchy_chamber.jpg" width="350"><figcaption><em>Chamber LEDs on</em></figcaption></figure> | <figure markdown="span"><img src="assets/Benchy_chamber_nozzle.jpg" width="350"><figcaption><em>Chamber & Nozzle LEDs on</em></figcaption></figure> |
-
+| ![No LEDs on](assets/Nolights.jpg){ width="400" } | ![Nozzle LED on](assets/NozzleLED.jpg){ width="400" } |
+| No LEDs on | Nozzle LED on |
+| ![Chamber LEDs on](assets/Chamber.jpg){ width="400" } | ![Chamber & Nozzle LEDs on](assets/Chamber_NozzleLED.jpg){ width="400" } |
+| Chamber LEDs on | Chamber & Nozzle LEDs on |
+| ![Chamber LEDs on](assets/Benchy_chamber.jpg){ width="400" } | ![Chamber & Nozzle LEDs on](assets/Benchy_chamber_nozzle.jpg){ width="400" } |
+| Chamber LEDs on | Chamber & Nozzle LEDs on |
 
 
 
