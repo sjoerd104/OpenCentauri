@@ -4,7 +4,9 @@ This section describes how and where to solder and use the missing nozzle LED on
 It also includes instructions on replacing the existing resistor to increase the LED brightness.
 
 The Centauri Carbon includes a MOSFET circuit for a nozzle LED, but the LED itself is unpopulated.  
-The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.
+The installed current-limiting resistor (100 Ω) results in a dim output, drawing only about 20 mA. With a few quick soldering steps, you can enable and tune this feature.  
+
+This modification is compatible with all firmware versions and does not require the OpenCentauri firmware.
 
 If you need any support, feel free to [join the Discord](https://discord.gg/t6Cft3wNJ3)  
 
@@ -37,18 +39,18 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 ## Installation  
 
 ### 1. Locate the LED pads on the front edge of the toolhead PCB. 
-![PCB LED pads](assets/PCB_LED.png)  
+![PCB LED pads](assets/PCB_LED.jpg)  
 
 ### 2. Orientation:  
   Align the LED so the wider gaps match the PCB pattern before soldering.   
   Additionally, the PCB has a **white line** marking on the **negative side** for easy orientation.  
    
 ### 3. Solder the white 5730 LED onto the existing footprint:  
-  ![LED placement](assets/LED.png)  
+  ![LED placement](assets/LED.jpg)  
   On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
 
   It should look something like this:  
-  ![LED Soldered](assets/LED_SOLDERED.png)   
+  ![LED Soldered](assets/LED_SOLDERED.jpg)   
 
 ### 4. (Optional) Replace resistor R18 with 27 Ω if higher brightness is desired.  
   ![Resistor R18](assets/R18.jpg)  
