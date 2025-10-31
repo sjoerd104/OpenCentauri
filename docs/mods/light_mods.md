@@ -41,21 +41,23 @@ If you need any support, feel free to [join the Discord](https://discord.gg/t6Cf
 ### 1. Locate the LED pads on the front edge of the toolhead PCB. 
 ![PCB LED pads](assets/PCB_LED.jpg)  
 
-### 2. Orientation:  
-  Align the LED so the wider gaps match the PCB pattern before soldering.   
-  Additionally, the PCB has a **white line** marking on the **negative side** for easy orientation.  
-   
-### 3. Solder the white 5730 LED onto the existing footprint:  
-  ![LED placement](assets/LED.jpg)  
-  On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
+### 2. Solder the white 5730 LED onto the existing footprint
 
-  It should look something like this:  
-  ![LED Soldered](assets/LED_SOLDERED.jpg)   
+!!! tip "LED Orientation"
+    Align the LED so the wider gaps match the PCB pattern before soldering.   
+    Additionally, the PCB has a **white line** marking on the **negative side** for easy orientation. 
 
-### 4. (Optional) Replace resistor R18 with 27 Ω if higher brightness is desired.  
+    ![LED placement](assets/LED.jpg)  
+    
+    On the LED, the **negative side** can be identified by the **larger gap** between the center pad and the outer pad.  
+
+It should look something like this:  
+![LED Soldered](assets/LED_SOLDERED.jpg) 
+
+### 3. (Optional) Replace resistor R18 with 27 Ω if higher brightness is desired.  
   ![Resistor R18](assets/R18.jpg)  
 
-### 5. Reassemble the toolhead.  
+### 4. Reassemble the toolhead.  
 
 !!! warning "Note"   
     We recommend against going below 27 Ω, as the LED may overheat in high-temperature chamber conditions.
